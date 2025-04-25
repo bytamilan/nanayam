@@ -43,9 +43,11 @@ jobs:
     - name: Helm upgrade --install
       run: |
         helm upgrade --install fabric-operator hlf-operator/fabric-operator \
+          --version 0.10.0 \
           --namespace fabric-operator --create-namespace \
           --set image.tag=v0.10.0 \
           --set rbac.create=true
+          --wait --timeout 5m
 
     # ---- 4.  (Optional) Apply org-specific CRDs/YAML from repo ----
     - name: Deploy Fabric components

@@ -21,7 +21,6 @@ jobs:
       uses: google-github-actions/auth@v2.1.9
       with:
         workload_identity_provider: ${{ secrets.WORKLOAD_ID_PROVIDER }}
-        service_account: ${{ secrets.SERVICE_ACCOUNT }}
 
     # ---- 2.  Fetch GKE credentials so kubectl/helm point to the cluster ----
     - name: Setup GKE credentials

@@ -24,3 +24,9 @@ pnpm-debug.log*
 **/.turbo
 **/.next
 **/fabric-operator
+/bevel-operator-fabric/**
+/scripts/istio-1.23.3
+/scripts/*.yaml
+/scripts/*.gz
+/scripts/*.tgz
+/scripts/*.json

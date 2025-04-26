@@ -1,0 +1,21 @@
+syntax = "proto3";
+package fabric;
+
+service FabricService {
+  rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
+  rpc QueryAsset(QueryAssetRequest) returns (QueryAssetResponse);
+  rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+}
+
+message CreateAssetRequest {
+  string assetId = 1;
+  string color = 2;
+  int32 size = 3;
+}
+message CreateAssetResponse { bool success = 1; }
+
+message QueryAssetRequest { string assetId = 1; }
+message QueryAssetResponse { string data = 1; }
+
+message ListAssetsRequest {}
+message ListAssetsResponse { repeated string assetIds = 1; }

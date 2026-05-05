@@ -159,6 +159,9 @@ func (h *FabricHandler) GetComplaintHistory(ctx context.Context, req *pb.GetComp
 // ---------------------------------------------------------------------------
 
 func parseAssetIDs(data []byte) ([]string, error) {
+	if len(data) == 0 {
+		return []string{}, nil
+	}
 	var assets []map[string]interface{}
 	if err := json.Unmarshal(data, &assets); err != nil {
 		return nil, fmt.Errorf("unmarshal assets: %w", err)
@@ -174,6 +177,9 @@ func parseAssetIDs(data []byte) ([]string, error) {
 }
 
 func parseComplaintIDs(data []byte) ([]string, error) {
+	if len(data) == 0 {
+		return []string{}, nil
+	}
 	var complaints []map[string]interface{}
 	if err := json.Unmarshal(data, &complaints); err != nil {
 		return nil, fmt.Errorf("unmarshal complaints: %w", err)

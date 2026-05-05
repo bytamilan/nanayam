@@ -20,10 +20,10 @@ NC='\033[0m'
 
 CC_NAME="complaint"
 CC_VERSION="1.0"
-CC_SEQ="1"
+CC_SEQ="3"
 CC_LABEL="${CC_NAME}_${CC_VERSION}"
 CHANNEL="complaint-channel"
-CC_ADDRESS="chaincode-complaint:9999"
+CC_ADDRESS="complaint:9999"
 
 log_info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
@@ -93,7 +93,7 @@ get_package_id() {
         -e CORE_PEER_MSPCONFIGPATH="/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/acb.nanayam.com/users/Admin@acb.nanayam.com/msp" \
         cli peer lifecycle chaincode queryinstalled >& /tmp/log.txt
     cat /tmp/log.txt
-    CC_PACKAGE_ID=$(grep -oP "Package ID: \K[^:]+" /tmp/log.txt | head -1)
+    CC_PACKAGE_ID=$(sed -n 's/.*Package ID: \([^,]*\),.*/\1/p' /tmp/log.txt | head -1)
     log_ok "Package ID: ${CC_PACKAGE_ID}"
 }
 
@@ -116,7 +116,8 @@ approve_org() {
             --package-id "${CC_PACKAGE_ID}" \
             --sequence "${CC_SEQ}" \
             --tls \
-            --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/msp/tlscacerts/tlsca.nanayam.com-cert.pem
+            --cafile /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/msp/tlscacerts/tlsca.nanayam.com-cert.pem \
+            --collections-config /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/complaint-system/collections_config.json
     log_ok "Approved for ${msp}"
 }
 
@@ -141,7 +142,8 @@ commit_cc() {
             --peerAddresses peer0.oversight.nanayam.com:10051 \
             --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/oversight.nanayam.com/peers/peer0.oversight.nanayam.com/tls/ca.crt \
             --peerAddresses peer0.judiciary.nanayam.com:11051 \
-            --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/judiciary.nanayam.com/peers/peer0.judiciary.nanayam.com/tls/ca.crt
+            --tlsRootCertFiles /opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/judiciary.nanayam.com/peers/peer0.judiciary.nanayam.com/tls/ca.crt \
+            --collections-config /opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode/complaint-system/collections_config.json
     log_ok "Chaincode committed"
 }
 
@@ -151,6 +153,7 @@ start_chaincode_container() {
         --name "${CC_NAME}" \
         --network nanayam \
         -e CHAINCODE_ID="${CC_PACKAGE_ID}" \
+        -e CORE_CHAINCODE_ID_NAME="${CC_PACKAGE_ID}" \
         -e CHAINCODE_SERVER_ADDRESS="0.0.0.0:9999" \
         "${CC_LABEL}"
     log_ok "Chaincode container started: ${CC_NAME}"

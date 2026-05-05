@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
@@ -119,10 +120,10 @@ func (cfg *GatewayConfig) Connect() (*client.Gateway, *grpc.ClientConn, error) {
 		id,
 		client.WithSign(sign),
 		client.WithClientConnection(conn),
-		client.WithEvaluateTimeout(5),
-		client.WithEndorseTimeout(15),
-		client.WithSubmitTimeout(5),
-		client.WithCommitStatusTimeout(60),
+		client.WithEvaluateTimeout(30*time.Second),
+		client.WithEndorseTimeout(30*time.Second),
+		client.WithSubmitTimeout(30*time.Second),
+		client.WithCommitStatusTimeout(60*time.Second),
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("connect gateway: %w", err)

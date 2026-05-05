@@ -131,6 +131,9 @@ For Kubernetes / GKE deployments, the project includes a Fabric Operator workflo
 See the existing operator setup for production-grade orchestration.
 
 ---
+## Notebook LLM
+[link to learn HLF](https://notebooklm.google.com/notebook/915d332c-3f08-430f-98cd-0f393116c54a)
+---
 
 ## License
 

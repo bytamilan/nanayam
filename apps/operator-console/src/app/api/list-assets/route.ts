@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 export async function GET() {
-    const res = await fetch('http://gateway:8080/v1/ListAssets');
+    const gateway = process.env.GATEWAY_URL || 'http://localhost:8080';
+    const res = await fetch(`${gateway}/v1/ListAssets`);
     const json = await res.json();
     return NextResponse.json(json);
 }

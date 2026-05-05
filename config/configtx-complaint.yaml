@@ -2,7 +2,7 @@
 # Anti-Corruption Complaint System - Configtx Configuration
 # =============================================================================
 # 4-org channel with endorsement policies designed to prevent unilateral
-// action by any single department.
+# action by any single department.
 # =============================================================================
 
 Organizations:

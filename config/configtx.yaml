@@ -1,10 +1,8 @@
 # =============================================================================
-# Nanayam - Configtx Configuration
+# Anti-Corruption Complaint System - Configtx Configuration
 # =============================================================================
-# This file is consumed by the 'configtxgen' tool to create:
-#   1. The genesis block for the ordering service (system channel)
-#   2. The channel creation transaction
-#   3. Anchor peer update transactions
+# 4-org channel with endorsement policies designed to prevent unilateral
+# action by any single department.
 # =============================================================================
 
 Organizations:
@@ -23,47 +21,89 @@ Organizations:
         Type: Signature
         Rule: "OR('OrdererMSP.admin')"
 
-  - &Org1
-    Name: Org1MSP
-    ID: Org1MSP
-    MSPDir: ../crypto-config/peerOrganizations/org1.nanayam.com/msp
+  - &ACB
+    Name: ACBMSP
+    ID: ACBMSP
+    MSPDir: ../crypto-config/peerOrganizations/acb.nanayam.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('Org1MSP.admin', 'Org1MSP.peer', 'Org1MSP.client')"
+        Rule: "OR('ACBMSP.admin', 'ACBMSP.peer', 'ACBMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('Org1MSP.admin', 'Org1MSP.client')"
+        Rule: "OR('ACBMSP.admin', 'ACBMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('Org1MSP.admin')"
+        Rule: "OR('ACBMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('Org1MSP.peer')"
+        Rule: "OR('ACBMSP.peer')"
     AnchorPeers:
-      - Host: peer0.org1.nanayam.com
+      - Host: peer0.acb.nanayam.com
         Port: 7051
 
-  - &Org2
-    Name: Org2MSP
-    ID: Org2MSP
-    MSPDir: ../crypto-config/peerOrganizations/org2.nanayam.com/msp
+  - &Dept
+    Name: DeptMSP
+    ID: DeptMSP
+    MSPDir: ../crypto-config/peerOrganizations/dept.nanayam.com/msp
     Policies:
       Readers:
         Type: Signature
-        Rule: "OR('Org2MSP.admin', 'Org2MSP.peer', 'Org2MSP.client')"
+        Rule: "OR('DeptMSP.admin', 'DeptMSP.peer', 'DeptMSP.client')"
       Writers:
         Type: Signature
-        Rule: "OR('Org2MSP.admin', 'Org2MSP.client')"
+        Rule: "OR('DeptMSP.admin', 'DeptMSP.client')"
       Admins:
         Type: Signature
-        Rule: "OR('Org2MSP.admin')"
+        Rule: "OR('DeptMSP.admin')"
       Endorsement:
         Type: Signature
-        Rule: "OR('Org2MSP.peer')"
+        Rule: "OR('DeptMSP.peer')"
     AnchorPeers:
-      - Host: peer0.org2.nanayam.com
+      - Host: peer0.dept.nanayam.com
         Port: 9051
+
+  - &Oversight
+    Name: OversightMSP
+    ID: OversightMSP
+    MSPDir: ../crypto-config/peerOrganizations/oversight.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin', 'OversightMSP.peer', 'OversightMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin', 'OversightMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OversightMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.oversight.nanayam.com
+        Port: 10051
+
+  - &Judiciary
+    Name: JudiciaryMSP
+    ID: JudiciaryMSP
+    MSPDir: ../crypto-config/peerOrganizations/judiciary.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.peer', 'JudiciaryMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.judiciary.nanayam.com
+        Port: 11051
 
 Capabilities:
   Channel: &ChannelCapabilities
@@ -141,23 +181,27 @@ Channel: &ChannelDefaults
     <<: *ChannelCapabilities
 
 Profiles:
-  TwoOrgsOrdererGenesis:
+  ComplaintOrdererGenesis:
     <<: *ChannelDefaults
     Orderer:
       <<: *OrdererDefaults
       Organizations:
         - *OrdererOrg
     Consortiums:
-      SampleConsortium:
+      ComplaintConsortium:
         Organizations:
-          - *Org1
-          - *Org2
+          - *ACB
+          - *Dept
+          - *Oversight
+          - *Judiciary
 
-  TwoOrgsChannel:
+  ComplaintChannel:
     <<: *ChannelDefaults
-    Consortium: SampleConsortium
+    Consortium: ComplaintConsortium
     Application:
       <<: *ApplicationDefaults
       Organizations:
-        - *Org1
-        - *Org2
+        - *ACB
+        - *Dept
+        - *Oversight
+        - *Judiciary

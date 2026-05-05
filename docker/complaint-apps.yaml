@@ -39,8 +39,6 @@ services:
       - ../crypto-config/peerOrganizations/acb.nanayam.com:/app/crypto:ro
     networks:
       - nanayam
-    depends_on:
-      - peer0.acb.nanayam.com
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------

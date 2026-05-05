@@ -96,6 +96,9 @@ generate_channel_artifacts() {
     log_info "Creating channel artifacts for complaint-channel..."
     export FABRIC_CFG_PATH="${PWD}/config"
 
+    # configtxgen expects the file to be named configtx.yaml
+    cp "${PWD}/config/configtx-complaint.yaml" "${PWD}/config/configtx.yaml"
+
     rm -rf "${CHANNEL_DIR}"
     mkdir -p "${CHANNEL_DIR}"
 

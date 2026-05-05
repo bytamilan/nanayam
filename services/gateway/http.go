@@ -8,7 +8,7 @@ import (
 )
 
 // registerRESTHandlers mounts simple HTTP handlers that wrap the gRPC service.
-func registerRESTHandlers(mux *http.ServeMux, handler *FabricHandler) {
+func registerRESTHandlers(mux *http.ServeMux, handler pb.FabricServiceServer) {
 	// -------------------------------------------------------------------------
 	// Asset endpoints (original)
 	// -------------------------------------------------------------------------

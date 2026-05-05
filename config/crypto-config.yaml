@@ -1,0 +1,31 @@
+# =============================================================================
+# Nanayam - Cryptogen Configuration
+# =============================================================================
+# This file defines the cryptographic entities for the Fabric network.
+# It is consumed by the 'cryptogen' tool to generate MSP certificates
+# and keys for all organizations, orderers, and peers.
+# =============================================================================
+
+OrdererOrgs:
+  - Name: OrdererOrg
+    Domain: nanayam.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: Org1
+    Domain: org1.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1
+
+  - Name: Org2
+    Domain: org2.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 2
+    Users:
+      Count: 1

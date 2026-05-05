@@ -1,0 +1,62 @@
+# =============================================================================
+# Nanayam - Connection Profile for Gateway SDK
+# =============================================================================
+# This connection profile is used by the Go gateway service (and any other
+# client SDK) to discover and connect to the Fabric network.
+# =============================================================================
+
+name: "nanayam-network"
+version: "1.0"
+client:
+  organization: Org1
+  connection:
+    timeout:
+      peer:
+        endorser: "300"
+
+organizations:
+  Org1:
+    mspid: Org1MSP
+    peers:
+      - peer0.org1.nanayam.com
+    certificateAuthorities:
+      - ca.org1.nanayam.com
+
+orderers:
+  orderer.nanayam.com:
+    url: grpcs://orderer.nanayam.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/msp/tlscacerts/tlsca.nanayam.com-cert.pem
+
+peers:
+  peer0.org1.nanayam.com:
+    url: grpcs://peer0.org1.nanayam.com:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.org1.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.nanayam.com/peers/peer0.org1.nanayam.com/tls/ca.crt
+
+certificateAuthorities:
+  ca.org1.nanayam.com:
+    url: https://ca.org1.nanayam.com:7054
+    caName: ca-org1
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/org1.nanayam.com/ca/ca.org1.nanayam.com-cert.pem
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    httpOptions:
+      verify: false
+
+channels:
+  mychannel:
+    orderers:
+      - orderer.nanayam.com
+    peers:
+      peer0.org1.nanayam.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true

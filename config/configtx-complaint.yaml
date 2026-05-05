@@ -1,0 +1,207 @@
+# =============================================================================
+# Anti-Corruption Complaint System - Configtx Configuration
+# =============================================================================
+# 4-org channel with endorsement policies designed to prevent unilateral
+// action by any single department.
+# =============================================================================
+
+Organizations:
+  - &OrdererOrg
+    Name: OrdererOrg
+    ID: OrdererMSP
+    MSPDir: ../crypto-config/ordererOrganizations/nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OrdererMSP.member')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OrdererMSP.admin')"
+
+  - &ACB
+    Name: ACBMSP
+    ID: ACBMSP
+    MSPDir: ../crypto-config/peerOrganizations/acb.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('ACBMSP.admin', 'ACBMSP.peer', 'ACBMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('ACBMSP.admin', 'ACBMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('ACBMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('ACBMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.acb.nanayam.com
+        Port: 7051
+
+  - &Dept
+    Name: DeptMSP
+    ID: DeptMSP
+    MSPDir: ../crypto-config/peerOrganizations/dept.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('DeptMSP.admin', 'DeptMSP.peer', 'DeptMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('DeptMSP.admin', 'DeptMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('DeptMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('DeptMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.dept.nanayam.com
+        Port: 9051
+
+  - &Oversight
+    Name: OversightMSP
+    ID: OversightMSP
+    MSPDir: ../crypto-config/peerOrganizations/oversight.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin', 'OversightMSP.peer', 'OversightMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin', 'OversightMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('OversightMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('OversightMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.oversight.nanayam.com
+        Port: 10051
+
+  - &Judiciary
+    Name: JudiciaryMSP
+    ID: JudiciaryMSP
+    MSPDir: ../crypto-config/peerOrganizations/judiciary.nanayam.com/msp
+    Policies:
+      Readers:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.peer', 'JudiciaryMSP.client')"
+      Writers:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin', 'JudiciaryMSP.client')"
+      Admins:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.admin')"
+      Endorsement:
+        Type: Signature
+        Rule: "OR('JudiciaryMSP.peer')"
+    AnchorPeers:
+      - Host: peer0.judiciary.nanayam.com
+        Port: 11051
+
+Capabilities:
+  Channel: &ChannelCapabilities
+    V2_0: true
+  Orderer: &OrdererCapabilities
+    V2_0: true
+  Application: &ApplicationCapabilities
+    V2_0: true
+
+Application: &ApplicationDefaults
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    LifecycleEndorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+    Endorsement:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Endorsement"
+  Capabilities:
+    <<: *ApplicationCapabilities
+
+Orderer: &OrdererDefaults
+  OrdererType: etcdraft
+  Addresses:
+    - orderer.nanayam.com:7050
+  BatchTimeout: 2s
+  BatchSize:
+    MaxMessageCount: 10
+    AbsoluteMaxBytes: 99 MB
+    PreferredMaxBytes: 512 KB
+  Organizations:
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+    BlockValidation:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.nanayam.com
+        Port: 7050
+        ClientTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
+        ServerTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
+  Capabilities:
+    <<: *OrdererCapabilities
+
+Channel: &ChannelDefaults
+  Policies:
+    Readers:
+      Type: ImplicitMeta
+      Rule: "ANY Readers"
+    Writers:
+      Type: ImplicitMeta
+      Rule: "ANY Writers"
+    Admins:
+      Type: ImplicitMeta
+      Rule: "MAJORITY Admins"
+  Capabilities:
+    <<: *ChannelCapabilities
+
+Profiles:
+  ComplaintOrdererGenesis:
+    <<: *ChannelDefaults
+    Orderer:
+      <<: *OrdererDefaults
+      Organizations:
+        - *OrdererOrg
+    Consortiums:
+      ComplaintConsortium:
+        Organizations:
+          - *ACB
+          - *Dept
+          - *Oversight
+          - *Judiciary
+
+  ComplaintChannel:
+    <<: *ChannelDefaults
+    Consortium: ComplaintConsortium
+    Application:
+      <<: *ApplicationDefaults
+      Organizations:
+        - *ACB
+        - *Dept
+        - *Oversight
+        - *Judiciary

@@ -3,10 +3,22 @@ package fabric;
 option go_package = "github.com/bytamilan/nanayam/services/gateway/proto";
 
 service FabricService {
+  // Asset methods
   rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
   rpc QueryAsset(QueryAssetRequest) returns (QueryAssetResponse);
   rpc ListAssets(ListAssetsRequest) returns (ListAssetsResponse);
+
+  // Complaint methods
+  rpc SubmitComplaint(SubmitComplaintRequest) returns (SubmitComplaintResponse);
+  rpc UpdateComplaint(UpdateComplaintRequest) returns (UpdateComplaintResponse);
+  rpc QueryComplaint(QueryComplaintRequest) returns (QueryComplaintResponse);
+  rpc ListComplaints(ListComplaintsRequest) returns (ListComplaintsResponse);
+  rpc GetComplaintHistory(GetComplaintHistoryRequest) returns (GetComplaintHistoryResponse);
 }
+
+// ---------------------------------------------------------------------------
+// Asset Messages
+// ---------------------------------------------------------------------------
 
 message CreateAssetRequest {
   string assetId = 1;
@@ -33,4 +45,54 @@ message ListAssetsRequest {}
 
 message ListAssetsResponse {
   repeated string assetIds = 1;
+}
+
+// ---------------------------------------------------------------------------
+// Complaint Messages
+// ---------------------------------------------------------------------------
+
+message SubmitComplaintRequest {
+  string complaintId = 1;
+  string category = 2;
+  string citizenHash = 3;
+  string descriptionHash = 4;
+  string attachmentsRef = 5;
+}
+
+message SubmitComplaintResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message UpdateComplaintRequest {
+  string complaintId = 1;
+  string action = 2;
+  string value = 3;
+}
+
+message UpdateComplaintResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message QueryComplaintRequest {
+  string complaintId = 1;
+}
+
+message QueryComplaintResponse {
+  string data = 1;
+}
+
+message ListComplaintsRequest {}
+
+message ListComplaintsResponse {
+  repeated string complaintIds = 1;
+}
+
+message GetComplaintHistoryRequest {
+  string complaintId = 1;
+}
+
+message GetComplaintHistoryResponse {
+  string data = 1;
 }

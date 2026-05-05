@@ -1,0 +1,49 @@
+# =============================================================================
+# Anti-Corruption Complaint System - Cryptogen Configuration
+# =============================================================================
+# Defines 4 peer organizations + orderer for the complaint network:
+#   - ACB        (Anti-Corruption Bureau)
+#   - Dept       (Department being complained against)
+#   - Oversight  (Independent oversight / ombudsman)
+#   - Judiciary  (Optional escalation)
+# =============================================================================
+
+OrdererOrgs:
+  - Name: OrdererOrg
+    Domain: nanayam.com
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: ACB
+    Domain: acb.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Dept
+    Domain: dept.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Oversight
+    Domain: oversight.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1
+
+  - Name: Judiciary
+    Domain: judiciary.nanayam.com
+    EnableNodeOUs: true
+    Template:
+      Count: 1
+    Users:
+      Count: 1

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	pb "github.com/bytamilan/nanayam/services/gateway/proto"
@@ -62,8 +63,18 @@ func (h *FabricHandler) ListAssets(ctx context.Context, req *pb.ListAssetsReques
 	contract := h.getContract()
 	result, err := contract.EvaluateTransaction("GetAllAssets")
 	if err != nil {
-		log.Printf("ListAssets error: %v", err)
-		return nil, err
+		log.Printf("ListAssets: GetAllAssets unavailable, trying ListAssets fallback: %v", err)
+		result, err = contract.EvaluateTransaction("ListAssets")
+		if err != nil {
+			// In complaint-only deployments, asset methods may not exist at all.
+			// Return an empty list so legacy UI panels degrade gracefully.
+			if isFunctionNotFoundErr(err) {
+				log.Printf("ListAssets: no asset listing function in contract, returning empty list: %v", err)
+				return &pb.ListAssetsResponse{AssetIds: []string{}}, nil
+			}
+			log.Printf("ListAssets error: %v", err)
+			return nil, err
+		}
 	}
 
 	ids, err := parseAssetIDs(result)
@@ -71,6 +82,14 @@ func (h *FabricHandler) ListAssets(ctx context.Context, req *pb.ListAssetsReques
 		return nil, err
 	}
 	return &pb.ListAssetsResponse{AssetIds: ids}, nil
+}
+
+func isFunctionNotFoundErr(err error) bool {
+	if err == nil {
+		return false
+	}
+	msg := strings.ToLower(err.Error())
+	return strings.Contains(msg, "function") && strings.Contains(msg, "not found")
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +181,22 @@ func parseAssetIDs(data []byte) ([]string, error) {
 	if len(data) == 0 {
 		return []string{}, nil
 	}
+
+	// 1) Accept direct arrays of IDs: ["asset1","asset2"]
+	var directIDs []string
+	if err := json.Unmarshal(data, &directIDs); err == nil {
+		return directIDs, nil
+	}
+
+	// 2) Accept object wrapper: {"assetIds":[...]}
+	var wrapped struct {
+		AssetIds []string `json:"assetIds"`
+	}
+	if err := json.Unmarshal(data, &wrapped); err == nil && wrapped.AssetIds != nil {
+		return wrapped.AssetIds, nil
+	}
+
+	// 3) Accept array of objects and extract ID variants.
 	var assets []map[string]interface{}
 	if err := json.Unmarshal(data, &assets); err != nil {
 		return nil, fmt.Errorf("unmarshal assets: %w", err)
@@ -170,6 +205,14 @@ func parseAssetIDs(data []byte) ([]string, error) {
 	ids := make([]string, 0, len(assets))
 	for _, asset := range assets {
 		if id, ok := asset["ID"].(string); ok {
+			ids = append(ids, id)
+			continue
+		}
+		if id, ok := asset["id"].(string); ok {
+			ids = append(ids, id)
+			continue
+		}
+		if id, ok := asset["assetId"].(string); ok {
 			ids = append(ids, id)
 		}
 	}

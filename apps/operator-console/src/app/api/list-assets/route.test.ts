@@ -32,4 +32,18 @@ describe('/api/list-assets', () => {
     expect(body.assetIds).toEqual([]);
     expect(body.error).toContain('Gateway down');
   });
+
+  it('returns empty list when chaincode function is missing', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      text: async () => 'rpc error: code = Unknown desc = Function GetAllAssets not found in contract SmartContract',
+    });
+
+    const res = await GET();
+    const body = await res.json();
+
+    expect(res.status).toBe(200);
+    expect(body.assetIds).toEqual([]);
+  });
 });

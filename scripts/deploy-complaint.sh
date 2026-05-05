@@ -20,7 +20,7 @@ NC='\033[0m'
 
 CC_NAME="complaint"
 CC_VERSION="1.0"
-CC_SEQ="3"
+CC_SEQ="1"
 CC_LABEL="${CC_NAME}_${CC_VERSION}"
 CHANNEL="complaint-channel"
 CC_ADDRESS="complaint:9999"

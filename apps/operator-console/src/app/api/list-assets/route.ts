@@ -5,7 +5,15 @@ export async function GET() {
     try {
         const res = await fetch(`${gateway}/v1/ListAssets`);
         if (!res.ok) {
-            return NextResponse.json({ assetIds: [], error: `Gateway error: ${res.status}` }, { status: 502 });
+            const raw = await res.text();
+            const lower = raw.toLowerCase();
+            if (lower.includes('function') && lower.includes('not found')) {
+                return NextResponse.json({ assetIds: [] }, { status: 200 });
+            }
+            return NextResponse.json(
+                { assetIds: [], error: `Gateway error: ${res.status}${raw ? ` - ${raw}` : ''}` },
+                { status: 502 }
+            );
         }
         const json = await res.json();
         return NextResponse.json(json);

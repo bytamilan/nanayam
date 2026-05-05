@@ -12,6 +12,34 @@ const STATUS_COLORS: Record<string, string> = {
     Rejected: 'bg-red-200 text-red-800',
 };
 
+function formatDateValue(value: unknown): string {
+    if (value == null) return '-';
+
+    if (typeof value === 'string' || typeof value === 'number') {
+        const d = new Date(value);
+        return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString();
+    }
+
+    if (typeof value === 'object') {
+        const ts = value as { seconds?: number | string; nanos?: number | string };
+        if (ts.seconds !== undefined) {
+            const sec = typeof ts.seconds === 'string' ? Number(ts.seconds) : ts.seconds;
+            const nanos = typeof ts.nanos === 'string' ? Number(ts.nanos) : (ts.nanos ?? 0);
+            if (Number.isFinite(sec) && Number.isFinite(nanos)) {
+                const d = new Date((sec as number) * 1000 + Math.floor((nanos as number) / 1_000_000));
+                if (!Number.isNaN(d.getTime())) return d.toLocaleString();
+            }
+        }
+        try {
+            return JSON.stringify(value);
+        } catch {
+            return String(value);
+        }
+    }
+
+    return String(value);
+}
+
 export default function ComplaintTable() {
     const [complaints, setComplaints] = useState<Complaint[]>([]);
     const [selected, setSelected] = useState<Complaint | null>(null);
@@ -81,7 +109,7 @@ export default function ComplaintTable() {
                                     </span>
                                 </td>
                                 <td className="px-4 py-2 text-sm">{c.assignedDept || '-'}</td>
-                                <td className="px-4 py-2 text-sm">{new Date(c.createdAt).toLocaleString()}</td>
+                                <td className="px-4 py-2 text-sm">{formatDateValue(c.createdAt)}</td>
                                 <td className="px-4 py-2">
                                     <button onClick={() => selectComplaint(c)} className="text-blue-600 hover:underline text-sm">
                                         Manage
@@ -107,7 +135,7 @@ export default function ComplaintTable() {
                         <div><strong>Status:</strong> {selected.status}</div>
                         <div><strong>Category:</strong> {selected.category}</div>
                         <div><strong>Assigned:</strong> {selected.assignedDept || 'Unassigned'}</div>
-                        <div><strong>Created:</strong> {new Date(selected.createdAt).toLocaleString()}</div>
+                        <div><strong>Created:</strong> {formatDateValue(selected.createdAt)}</div>
                         {selected.closureReason && <div className="col-span-2"><strong>Closure Reason:</strong> {selected.closureReason}</div>}
                         {selected.rejectedReason && <div className="col-span-2"><strong>Rejection Reason:</strong> {selected.rejectedReason}</div>}
                     </div>
@@ -148,7 +176,7 @@ export default function ComplaintTable() {
                             {history.map((h, i) => (
                                 <div key={i} className="border-b pb-1">
                                     <div className="text-gray-500">Tx: {h.txId}</div>
-                                    <div className="text-gray-700">{h.timestamp}</div>
+                                    <div className="text-gray-700">{formatDateValue(h.timestamp)}</div>
                                 </div>
                             ))}
                         </div>

@@ -1,0 +1,21 @@
+# Chaincode as a Service (CCAAS) for asset-transfer-basic
+# This runs the chaincode externally so the peer doesn't need Docker-in-Docker builds.
+
+version: "3.7"
+
+networks:
+  nanayam:
+    external: true
+    name: nanayam
+
+services:
+  chaincode-basic-org1:
+    container_name: chaincode-basic-org1
+    build:
+      context: ../chaincode/asset-transfer-basic
+      dockerfile: Dockerfile
+    environment:
+      - CHAINCODE_ID=${CHAINCODE_ID}
+      - CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999
+    networks:
+      - nanayam

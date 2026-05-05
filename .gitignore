@@ -36,3 +36,4 @@ pnpm-debug.log*
 /chaincode/**
 /organizations/**
 /channel-artifacts/**
+*.tar.gz

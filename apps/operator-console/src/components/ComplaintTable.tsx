@@ -81,15 +81,15 @@ export default function ComplaintTable() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold">Complaints</h2>
-                <button onClick={load} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">
+                <button onClick={load} className="px-3 py-1.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700">
                     Refresh
                 </button>
             </div>
 
-            <div className="overflow-x-auto">
-                <table className="min-w-full table-auto border-collapse">
+            <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+                <table className="min-w-full table-auto border-collapse text-slate-900">
                     <thead>
-                        <tr className="bg-gray-100 text-left">
+                        <tr className="bg-slate-50 text-left text-slate-600">
                             <th className="px-4 py-2">ID</th>
                             <th className="px-4 py-2">Category</th>
                             <th className="px-4 py-2">Status</th>
@@ -100,7 +100,7 @@ export default function ComplaintTable() {
                     </thead>
                     <tbody>
                         {complaints.map(c => (
-                            <tr key={c.complaintId} className="border-t hover:bg-gray-50">
+                            <tr key={c.complaintId} className="border-t border-slate-200 hover:bg-slate-50">
                                 <td className="px-4 py-2 font-mono text-sm">{c.complaintId}</td>
                                 <td className="px-4 py-2 capitalize">{c.category}</td>
                                 <td className="px-4 py-2">
@@ -111,72 +111,72 @@ export default function ComplaintTable() {
                                 <td className="px-4 py-2 text-sm">{c.assignedDept || '-'}</td>
                                 <td className="px-4 py-2 text-sm">{formatDateValue(c.createdAt)}</td>
                                 <td className="px-4 py-2">
-                                    <button onClick={() => selectComplaint(c)} className="text-blue-600 hover:underline text-sm">
+                                    <button onClick={() => selectComplaint(c)} className="text-blue-700 hover:text-blue-800 hover:underline text-sm font-medium">
                                         Manage
                                     </button>
                                 </td>
                             </tr>
                         ))}
                         {complaints.length === 0 && (
-                            <tr><td colSpan={6} className="px-4 py-4 text-gray-500 text-center">No complaints found.</td></tr>
+                            <tr><td colSpan={6} className="px-4 py-4 text-slate-500 text-center">No complaints found.</td></tr>
                         )}
                     </tbody>
                 </table>
             </div>
 
             {selected && (
-                <div className="border rounded-lg p-4 bg-white shadow-sm">
+                <div className="border border-slate-200 rounded-lg p-4 bg-white text-slate-900 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold">Manage: {selected.complaintId}</h3>
-                        <button onClick={() => setSelected(null)} className="text-gray-500 hover:text-gray-700">✕</button>
+                        <button onClick={() => setSelected(null)} className="text-slate-400 hover:text-slate-700">✕</button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                        <div><strong>Status:</strong> {selected.status}</div>
-                        <div><strong>Category:</strong> {selected.category}</div>
-                        <div><strong>Assigned:</strong> {selected.assignedDept || 'Unassigned'}</div>
-                        <div><strong>Created:</strong> {formatDateValue(selected.createdAt)}</div>
-                        {selected.closureReason && <div className="col-span-2"><strong>Closure Reason:</strong> {selected.closureReason}</div>}
-                        {selected.rejectedReason && <div className="col-span-2"><strong>Rejection Reason:</strong> {selected.rejectedReason}</div>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-slate-700 mb-4">
+                        <div><strong className="text-slate-900">Status:</strong> {selected.status}</div>
+                        <div><strong className="text-slate-900">Category:</strong> {selected.category}</div>
+                        <div><strong className="text-slate-900">Assigned:</strong> {selected.assignedDept || 'Unassigned'}</div>
+                        <div><strong className="text-slate-900">Created:</strong> {formatDateValue(selected.createdAt)}</div>
+                        {selected.closureReason && <div className="col-span-1 md:col-span-2"><strong className="text-slate-900">Closure Reason:</strong> {selected.closureReason}</div>}
+                        {selected.rejectedReason && <div className="col-span-1 md:col-span-2"><strong className="text-slate-900">Rejection Reason:</strong> {selected.rejectedReason}</div>}
                     </div>
 
                     <div className="flex flex-wrap gap-2 mb-4">
                         {selected.status === 'Submitted' && (
                             <>
-                                <button disabled={loading} onClick={() => doAction('acknowledge')} className="px-3 py-1 bg-blue-600 text-white rounded text-sm disabled:opacity-50">Acknowledge (ACB)</button>
-                                <button disabled={loading} onClick={() => doAction('reject', 'Invalid submission')} className="px-3 py-1 bg-red-600 text-white rounded text-sm disabled:opacity-50">Reject (ACB)</button>
+                                <button disabled={loading} onClick={() => doAction('acknowledge')} className="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Acknowledge (ACB)</button>
+                                <button disabled={loading} onClick={() => doAction('reject', 'Invalid submission')} className="px-3 py-1.5 bg-red-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Reject (ACB)</button>
                             </>
                         )}
                         {selected.status === 'Acknowledged' && (
                             <>
-                                <button disabled={loading} onClick={() => doAction('assign', 'DeptMSP')} className="px-3 py-1 bg-indigo-600 text-white rounded text-sm disabled:opacity-50">Assign to Dept</button>
-                                <button disabled={loading} onClick={() => doAction('updateStatus', 'UnderInvestigation')} className="px-3 py-1 bg-yellow-600 text-white rounded text-sm disabled:opacity-50">Start Investigation</button>
+                                <button disabled={loading} onClick={() => doAction('assign', 'DeptMSP')} className="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Assign to Dept</button>
+                                <button disabled={loading} onClick={() => doAction('updateStatus', 'UnderInvestigation')} className="px-3 py-1.5 bg-yellow-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Start Investigation</button>
                             </>
                         )}
                         {selected.status === 'UnderInvestigation' && (
                             <>
-                                <button disabled={loading} onClick={() => doAction('addEvidence', 'evidence-doc-001')} className="px-3 py-1 bg-gray-600 text-white rounded text-sm disabled:opacity-50">Add Evidence</button>
-                                <button disabled={loading} onClick={() => doAction('updateStatus', 'ActionTaken')} className="px-3 py-1 bg-purple-600 text-white rounded text-sm disabled:opacity-50">Mark Action Taken</button>
+                                <button disabled={loading} onClick={() => doAction('addEvidence', 'evidence-doc-001')} className="px-3 py-1.5 bg-slate-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Add Evidence</button>
+                                <button disabled={loading} onClick={() => doAction('updateStatus', 'ActionTaken')} className="px-3 py-1.5 bg-purple-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Mark Action Taken</button>
                             </>
                         )}
                         {selected.status === 'ActionTaken' && (
-                            <button disabled={loading} onClick={() => doAction('requestClosure', 'Investigation complete. Recommended closure.')} className="px-3 py-1 bg-orange-600 text-white rounded text-sm disabled:opacity-50">Request Closure (ACB)</button>
+                            <button disabled={loading} onClick={() => doAction('requestClosure', 'Investigation complete. Recommended closure.')} className="px-3 py-1.5 bg-orange-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Request Closure (ACB)</button>
                         )}
                         {selected.status === 'PendingClosure' && (
-                            <button disabled={loading} onClick={() => doAction('approveClosure')} className="px-3 py-1 bg-green-600 text-white rounded text-sm disabled:opacity-50">Approve Closure (Oversight)</button>
+                            <button disabled={loading} onClick={() => doAction('approveClosure')} className="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed">Approve Closure (Oversight)</button>
                         )}
                     </div>
 
-                    {message && <div className="text-sm mb-2 text-gray-700">{message}</div>}
+                    {message && <div className="text-sm mb-2 text-slate-700">{message}</div>}
 
                     <div>
-                        <h4 className="font-semibold text-sm mb-2">Audit Trail (Ledger History)</h4>
-                        <div className="max-h-48 overflow-y-auto border rounded p-2 bg-gray-50 text-xs font-mono space-y-1">
-                            {history.length === 0 && <div className="text-gray-400">No history available.</div>}
+                        <h4 className="font-semibold text-sm text-slate-900 mb-2">Audit Trail (Ledger History)</h4>
+                        <div className="max-h-48 overflow-y-auto border border-slate-200 rounded p-2 bg-slate-50 text-xs font-mono text-slate-700 space-y-1">
+                            {history.length === 0 && <div className="text-slate-400">No history available.</div>}
                             {history.map((h, i) => (
-                                <div key={i} className="border-b pb-1">
-                                    <div className="text-gray-500">Tx: {h.txId}</div>
-                                    <div className="text-gray-700">{formatDateValue(h.timestamp)}</div>
+                                <div key={i} className="border-b border-slate-200 pb-1 last:border-b-0">
+                                    <div className="text-slate-500">Tx: {h.txId}</div>
+                                    <div className="text-slate-700">{formatDateValue(h.timestamp)}</div>
                                 </div>
                             ))}
                         </div>

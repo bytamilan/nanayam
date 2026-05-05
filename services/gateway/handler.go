@@ -7,8 +7,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hyperledger/fabric-gateway/pkg/client"
 	pb "github.com/bytamilan/nanayam/services/gateway/proto"
+	"github.com/hyperledger/fabric-gateway/pkg/client"
 )
 
 // FabricHandler implements the gRPC FabricServiceServer.

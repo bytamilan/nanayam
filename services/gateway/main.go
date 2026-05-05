@@ -6,39 +6,72 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	pb "github.com/yourorg/fabric-gateway/proto"
+	pb "github.com/bytamilan/nanayam/services/gateway/proto"
 	"google.golang.org/grpc"
 )
 
 func main() {
 	grpcPort := flag.String("grpc-port", ":50051", "gRPC server port")
-	httpPort := flag.String("http-port", ":8080", "REST gateway port")
+	httpPort := flag.String("http-port", ":8080", "REST server port")
 	flag.Parse()
+
+	// Load gateway configuration from environment
+	cfg := NewGatewayFromEnv()
+	log.Printf("Connecting to Fabric peer at %s (MSP: %s)", cfg.PeerEndpoint, cfg.MSP_ID)
+
+	// Connect to Fabric
+	gw, conn, err := cfg.Connect()
+	if err != nil {
+		log.Fatalf("Failed to connect to Fabric gateway: %v", err)
+	}
+	defer conn.Close()
+	defer gw.Close()
+
+	log.Println("Connected to Fabric network successfully")
+
+	handler := NewFabricHandler(gw, cfg.ChannelName, cfg.ChaincodeName)
 
 	// 1) Start gRPC server
 	lis, err := net.Listen("tcp", *grpcPort)
 	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
+		log.Fatalf("Failed to listen on %s: %v", *grpcPort, err)
 	}
 	grpcServer := grpc.NewServer()
-	pb.RegisterFabricServiceServer(grpcServer, &FabricHandler{})
+	pb.RegisterFabricServiceServer(grpcServer, handler)
+
 	go func() {
-		log.Printf("gRPC server listening on %s", *grpcPort)
+		log.Printf("gRPC distribution server listening on %s", *grpcPort)
 		if err := grpcServer.Serve(lis); err != nil {
 			log.Fatalf("gRPC serve error: %v", err)
 		}
 	}()
 
-	// 2) Start HTTP REST Gateway
-	ctx := context.Background()
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithInsecure()} // TLS config as needed
-	err = pb.RegisterFabricServiceHandlerFromEndpoint(ctx, mux, *grpcPort, opts)
-	if err != nil {
-		log.Fatalf("failed to register gateway: %v", err)
+	// 2) Start HTTP REST server
+	mux := http.NewServeMux()
+	registerRESTHandlers(mux, handler)
+
+	httpServer := &http.Server{
+		Addr:    *httpPort,
+		Handler: mux,
 	}
-	log.Printf("REST gateway listening on %s", *httpPort)
-	log.Fatal(http.ListenAndServe(*httpPort, mux))
+
+	go func() {
+		log.Printf("REST distribution gateway listening on %s", *httpPort)
+		if err := httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("HTTP serve error: %v", err)
+		}
+	}()
+
+	// Wait for interrupt signal
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	<-sigCh
+
+	log.Println("Shutting down distribution server...")
+	grpcServer.GracefulStop()
+	_ = httpServer.Shutdown(context.Background())
 }

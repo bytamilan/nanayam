@@ -1,5 +1,6 @@
 syntax = "proto3";
 package fabric;
+option go_package = "github.com/bytamilan/nanayam/services/gateway/proto";
 
 service FabricService {
   rpc CreateAsset(CreateAssetRequest) returns (CreateAssetResponse);
@@ -11,11 +12,25 @@ message CreateAssetRequest {
   string assetId = 1;
   string color = 2;
   int32 size = 3;
+  string owner = 4;
+  int32 appraisedValue = 5;
 }
-message CreateAssetResponse { bool success = 1; }
 
-message QueryAssetRequest { string assetId = 1; }
-message QueryAssetResponse { string data = 1; }
+message CreateAssetResponse {
+  bool success = 1;
+  string error = 2;
+}
+
+message QueryAssetRequest {
+  string assetId = 1;
+}
+
+message QueryAssetResponse {
+  string data = 1;
+}
 
 message ListAssetsRequest {}
-message ListAssetsResponse { repeated string assetIds = 1; }
+
+message ListAssetsResponse {
+  repeated string assetIds = 1;
+}

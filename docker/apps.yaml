@@ -1,0 +1,65 @@
+# =============================================================================
+# Nanayam - Applications Docker Compose
+# =============================================================================
+# This compose file runs the Nanayam distribution services on top of the
+# Fabric network defined in fabric-network.yaml. Both stacks share the
+# 'nanayam' Docker network.
+#
+# Usage:
+#   docker-compose -f docker/apps.yaml up -d --build
+# =============================================================================
+
+version: "3.7"
+
+networks:
+  nanayam:
+    external: true
+    name: nanayam
+
+services:
+  # ---------------------------------------------------------------------------
+  # Go gRPC / REST Gateway (Distribution Server)
+  # ---------------------------------------------------------------------------
+  gateway:
+    container_name: nanayam-gateway
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - GATEWAY_GRPC_PORT=50051
+      - GATEWAY_HTTP_PORT=8080
+      - FABRIC_CHANNEL=mychannel
+      - FABRIC_CHAINCODE=basic
+      - MSP_ID=Org1MSP
+      - CRYPTO_PATH=/app/crypto
+      - PEER_ENDPOINT=peer0.org1.nanayam.com:7051
+      - TLS_CERT_PATH=/app/crypto/peers/peer0.org1.nanayam.com/tls/ca.crt
+    ports:
+      - "50051:50051"
+      - "8080:8080"
+    volumes:
+      - ../crypto-config/peerOrganizations/org1.nanayam.com:/app/crypto:ro
+    networks:
+      - nanayam
+    depends_on:
+      - peer0.org1.nanayam.com
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Operator Console (Next.js)
+  # ---------------------------------------------------------------------------
+  console:
+    container_name: nanayam-console
+    build:
+      context: ../apps/operator-console
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway:8080
+      - GATEWAY_URL=http://gateway:8080
+    ports:
+      - "3000:3000"
+    networks:
+      - nanayam
+    depends_on:
+      - gateway
+    restart: unless-stopped

@@ -30,3 +30,9 @@ pnpm-debug.log*
 /scripts/*.gz
 /scripts/*.tgz
 /scripts/*.json
+
+/crypto-config/**
+/bin/**
+/chaincode/**
+/organizations/**
+/channel-artifacts/**

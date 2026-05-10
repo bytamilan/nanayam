@@ -5,8 +5,8 @@
 # One-liner install script for macOS & Linux.
 #
 # Usage:
-#   curl -fsSL https://nanayam.io/install.sh | bash
-#   curl -fsSL https://nanayam.io/install.sh | bash -s -- --with-fabric --setup
+#   curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash -s -- --with-fabric --setup
 # =============================================================================
 
 set -euo pipefail

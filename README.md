@@ -33,7 +33,7 @@ Nanayam is a **private, permissioned Web3 ledger** built on [Hyperledger Fabric]
 ### One-Liner Install (Recommended)
 
 ```bash
-curl -fsSL https://nanayam.io/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
 ```
 
 Then run:
@@ -118,10 +118,10 @@ nanayam console                          # Start Next.js operator console
 
 ```bash
 # macOS & Linux
-curl -fsSL https://nanayam.io/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
 
 # With Fabric binaries + prerequisites
-curl -fsSL https://nanayam.io/install.sh | bash -s -- --with-fabric --setup
+curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash -s -- --with-fabric --setup
 
 # Or build from source
 make build

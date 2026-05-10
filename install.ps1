@@ -1,8 +1,8 @@
 # Nanayam CLI Installer for Windows PowerShell
 #
 # Usage:
-#   irm https://nanayam.io/install.ps1 | iex
-#   irm https://nanayam.io/install.ps1 | iex -Command { & $args[0] --with-fabric }
+#   irm https://raw.githubusercontent.com/bytamilan/nanayam/main/install.ps1 | iex
+#   irm https://raw.githubusercontent.com/bytamilan/nanayam/main/install.ps1 | iex -Command { & $args[0] --with-fabric }
 
 $ErrorActionPreference = "Stop"
 

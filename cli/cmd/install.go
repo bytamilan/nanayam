@@ -22,7 +22,7 @@ var installCmd = &cobra.Command{
 	Long: `Install the nanayam CLI to ~/.nanayam/bin/ and add it to your PATH.
 
 This command is primarily used by the install script:
-  curl -fsSL https://nanayam.io/install.sh | bash
+  curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
 
 You can also run it directly to self-update.`,
 	RunE: runInstall,

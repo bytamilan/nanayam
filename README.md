@@ -30,6 +30,22 @@ Nanayam is a **private, permissioned Web3 ledger** built on [Hyperledger Fabric]
 
 ## Quick Start
 
+### One-Liner Install (Recommended)
+
+```bash
+curl -fsSL https://nanayam.io/install.sh | bash
+```
+
+Then run:
+```bash
+nanayam prerequisites --auto    # Install Docker, Fabric binaries, etc.
+nanayam network up              # Start the full Fabric network
+nanayam channel create --name mychannel --profile TwoOrgsChannel
+nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic
+```
+
+### Classic Script Setup
+
 > Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
 
 ```bash
@@ -52,12 +68,79 @@ For detailed instructions, see [`docs/local-setup-guide.md`](docs/local-setup-gu
 
 ---
 
+## Nanayam CLI
+
+Nanayam includes a unified CLI for managing the entire Fabric stack:
+
+```bash
+# Install prerequisites and Fabric binaries
+nanayam prerequisites --auto
+
+# Node lifecycle
+nanayam node init --type peer --org Org1
+nanayam node start peer0.org1.nanayam.com
+nanayam node stop peer0.org1.nanayam.com
+nanayam node status
+
+# Network orchestration
+nanayam network up --profile basic       # or --profile complaint
+nanayam network down
+nanayam network clean                    # Wipe all data
+
+# Crypto & channels
+nanayam crypto generate
+nanayam channel create --name mychannel --profile TwoOrgsChannel
+nanayam channel join --name mychannel
+nanayam channel update-anchor --name mychannel --org Org1MSP
+
+# Chaincode lifecycle
+nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic
+nanayam chaincode install --package basic.tar.gz
+nanayam chaincode approve --name basic --channel mychannel --package-id basic_1.0:...
+nanayam chaincode commit --name basic --channel mychannel
+nanayam chaincode invoke --channel mychannel --name basic --function InitLedger
+nanayam chaincode query --channel mychannel --name basic --function GetAllAssets
+
+# User identity management
+nanayam user create --id alice --secret alicepw --type client --org Org1
+nanayam user enroll --id alice --secret alicepw --org Org1
+
+# Consortium connectivity
+nanayam consortium connect --orderer orderer.example.com:7050 --tls-cert ./tls.crt --org NewOrg --domain neworg.example.com
+nanayam consortium join-channel --name mychannel --block ./mychannel.block
+
+# Application services
+nanayam gateway                          # Start Go REST/gRPC gateway
+nanayam console                          # Start Next.js operator console
+```
+
+### Install the CLI
+
+```bash
+# macOS & Linux
+curl -fsSL https://nanayam.io/install.sh | bash
+
+# With Fabric binaries + prerequisites
+curl -fsSL https://nanayam.io/install.sh | bash -s -- --with-fabric --setup
+
+# Or build from source
+make build
+make install
+```
+
+---
+
 ## Project Structure
 
 ```
 nanayam/
 ├── apps/
 │   └── operator-console/      # Next.js web UI
+├── cli/                       # Nanayam CLI (Go + Cobra)
+│   ├── cmd/                   # Command implementations
+│   ├── internal/              # Internal packages
+│   ├── templates/             # Embedded Docker/Config templates
+│   └── main.go                # CLI entry point
 ├── config/
 │   ├── crypto-config.yaml     # Cryptogen configuration
 │   ├── configtx.yaml          # Channel configuration
@@ -79,6 +162,10 @@ nanayam/
 │   └── start-distribution.sh  # Start gateway + console
 ├── services/
 │   └── gateway/               # Go gRPC/REST distribution server
+├── install.sh                 # One-liner installer (macOS/Linux)
+├── install.ps1                # PowerShell installer (Windows)
+├── install.cmd                # CMD installer (Windows)
+├── Makefile                   # Build system
 └── README.md
 ```
 
@@ -109,6 +196,11 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 ## Stopping the Stack
 
 ```bash
+# Using the CLI
+nanayam network down          # Stop Fabric network
+nanayam network clean         # Stop and wipe all data
+
+# Or using Docker Compose directly
 # Stop apps only (gateway + console)
 docker-compose -f docker/apps.yaml down
 

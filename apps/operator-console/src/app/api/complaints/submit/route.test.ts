@@ -1,7 +1,15 @@
 import { POST } from './route';
+import { NextRequest } from 'next/server';
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as any;
+
+function mockReq(body: object): NextRequest {
+  return {
+    cookies: { get: () => undefined },
+    json: async () => body,
+  } as unknown as NextRequest;
+}
 
 describe('/api/complaints/submit', () => {
   beforeEach(() => {
@@ -15,12 +23,7 @@ describe('/api/complaints/submit', () => {
       json: async () => ({ success: true }),
     });
 
-    const req = new Request('http://localhost/api/complaints/submit', {
-      method: 'POST',
-      body: JSON.stringify({ complaintId: 'COMP-001', category: 'bribery' }),
-    });
-
-    const res = await POST(req);
+    const res = await POST(mockReq({ complaintId: 'COMP-001', category: 'bribery' }));
     const body = await res.json();
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -36,12 +39,7 @@ describe('/api/complaints/submit', () => {
   it('returns error when gateway is unreachable', async () => {
     mockFetch.mockRejectedValue(new Error('Connection refused'));
 
-    const req = new Request('http://localhost/api/complaints/submit', {
-      method: 'POST',
-      body: JSON.stringify({}),
-    });
-
-    const res = await POST(req);
+    const res = await POST(mockReq({}));
     const body = await res.json();
 
     expect(res.status).toBe(502);

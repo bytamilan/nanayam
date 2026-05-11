@@ -1,13 +1,17 @@
 export interface Asset { assetId: string; color: string; size: number; }
 
+async function fetchWithAuth(url: string, options?: RequestInit) {
+    return fetch(url, { ...options, credentials: 'include' });
+}
+
 export async function listAssets(): Promise<string[]> {
-    const res = await fetch('/api/ListAssets');
+    const res = await fetchWithAuth('/api/list-assets');
     const json = await res.json();
     return json.assetIds;
 }
 
 export async function createAsset(asset: Asset): Promise<boolean> {
-    const res = await fetch('/api/CreateAsset', {
+    const res = await fetchWithAuth('/api/create-asset', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(asset)
     });
@@ -34,13 +38,13 @@ export interface Complaint {
 }
 
 export async function listComplaints(): Promise<Complaint[]> {
-    const res = await fetch('/api/complaints');
+    const res = await fetchWithAuth('/api/complaints');
     const json = await res.json();
     return json.complaints || [];
 }
 
 export async function getComplaint(id: string): Promise<Complaint | null> {
-    const res = await fetch(`/api/complaints/${id}`);
+    const res = await fetchWithAuth(`/api/complaints/${id}`);
     if (!res.ok) return null;
     return res.json();
 }
@@ -52,7 +56,7 @@ export async function submitComplaint(data: {
     descriptionHash: string;
     attachmentsRef: string;
 }): Promise<boolean> {
-    const res = await fetch('/api/complaints/submit', {
+    const res = await fetchWithAuth('/api/complaints/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -66,7 +70,7 @@ export async function updateComplaint(data: {
     action: string;
     value?: string;
 }): Promise<boolean> {
-    const res = await fetch('/api/complaints/update', {
+    const res = await fetchWithAuth('/api/complaints/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
@@ -76,7 +80,7 @@ export async function updateComplaint(data: {
 }
 
 export async function getComplaintHistory(id: string): Promise<any[]> {
-    const res = await fetch(`/api/complaints/${id}/history`);
+    const res = await fetchWithAuth(`/api/complaints/${id}/history`);
     if (!res.ok) return [];
     const json = await res.json();
     try {

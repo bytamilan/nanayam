@@ -1,7 +1,14 @@
 import { GET } from './route';
+import { NextRequest } from 'next/server';
 
 const mockFetch = jest.fn();
 global.fetch = mockFetch as any;
+
+function mockReq(): NextRequest {
+  return {
+    cookies: { get: () => undefined },
+  } as unknown as NextRequest;
+}
 
 describe('/api/list-assets', () => {
   beforeEach(() => {
@@ -15,17 +22,17 @@ describe('/api/list-assets', () => {
       json: async () => ({ assetIds: ['asset1', 'asset2'] }),
     });
 
-    const res = await GET();
+    const res = await GET(mockReq());
     const body = await res.json();
 
-    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v1/ListAssets');
+    expect(mockFetch).toHaveBeenCalledWith('http://localhost:8080/v1/ListAssets', expect.any(Object));
     expect(body.assetIds).toEqual(['asset1', 'asset2']);
   });
 
   it('returns error when gateway fails', async () => {
     mockFetch.mockRejectedValue(new Error('Gateway down'));
 
-    const res = await GET();
+    const res = await GET(mockReq());
     const body = await res.json();
 
     expect(res.status).toBe(502);
@@ -40,7 +47,7 @@ describe('/api/list-assets', () => {
       text: async () => 'rpc error: code = Unknown desc = Function GetAllAssets not found in contract SmartContract',
     });
 
-    const res = await GET();
+    const res = await GET(mockReq());
     const body = await res.json();
 
     expect(res.status).toBe(200);

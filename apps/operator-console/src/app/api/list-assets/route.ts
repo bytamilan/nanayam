@@ -1,9 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET() {
-    const gateway = process.env.GATEWAY_URL || 'http://localhost:8080';
+const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8080';
+
+function getAuthHeader(req: NextRequest): HeadersInit {
+    const token = req.cookies.get('nanayam_token')?.value;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function GET(req: NextRequest) {
     try {
-        const res = await fetch(`${gateway}/v1/ListAssets`);
+        const headers = getAuthHeader(req);
+        const res = await fetch(`${GATEWAY_URL}/v1/ListAssets`, { headers });
         if (!res.ok) {
             const raw = await res.text();
             const lower = raw.toLowerCase();

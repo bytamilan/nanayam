@@ -1,10 +1,17 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
-    const gateway = process.env.GATEWAY_URL || 'http://localhost:8080';
+const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8080';
+
+function getAuthHeader(req: NextRequest): HeadersInit {
+    const token = req.cookies.get('nanayam_token')?.value;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
         const { id } = await params;
-        const res = await fetch(`${gateway}/v1/QueryComplaint?complaintId=${id}`);
+        const headers = getAuthHeader(req);
+        const res = await fetch(`${GATEWAY_URL}/v1/QueryComplaint?complaintId=${id}`, { headers });
         if (!res.ok) {
             return NextResponse.json({ error: `Gateway error: ${res.status}` }, { status: 502 });
         }

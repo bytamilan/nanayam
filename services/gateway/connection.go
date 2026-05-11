@@ -25,6 +25,7 @@ type GatewayConfig struct {
 	ChaincodeName   string
 	IdentityCert    string
 	IdentityKey     string
+	gateway         *client.Gateway // stored after Connect for ledger queries
 }
 
 // NewGatewayFromEnv creates a GatewayConfig from environment variables.
@@ -129,6 +130,7 @@ func (cfg *GatewayConfig) Connect() (*client.Gateway, *grpc.ClientConn, error) {
 		return nil, nil, fmt.Errorf("connect gateway: %w", err)
 	}
 
+	cfg.gateway = gw
 	return gw, conn, nil
 }
 

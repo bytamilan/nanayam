@@ -12,4 +12,4 @@ echo This installer requires PowerShell.
 echo Redirecting to PowerShell installer...
 echo.
 
-powershell -Command "& {irm https://raw.githubusercontent.com/bytamilan/nanayam/main/install.ps1 | iex}"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$tmp = Join-Path $env:TEMP 'nanayam-install.ps1'; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/bytamilan/nanayam/main/install.ps1' -OutFile $tmp; & $tmp %*"

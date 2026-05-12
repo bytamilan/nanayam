@@ -80,8 +80,8 @@ var chaincodeCmd = &cobra.Command{
 }
 
 var ccPackageCmd = &cobra.Command{
-	Use:   "package",
-	Short: "Package chaincode",
+	Use:     "package",
+	Short:   "Package chaincode",
 	Example: `  nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic --version 1.0`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path, _ := cmd.Flags().GetString("path")
@@ -149,8 +149,8 @@ var ccInstallCmd = &cobra.Command{
 }
 
 var ccApproveCmd = &cobra.Command{
-	Use:   "approve",
-	Short: "Approve chaincode definition for your org",
+	Use:     "approve",
+	Short:   "Approve chaincode definition for your org",
 	Example: `  nanayam chaincode approve --name basic --channel mychannel --package-id basic_1.0:abc123...`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("name")
@@ -191,8 +191,8 @@ var ccApproveCmd = &cobra.Command{
 }
 
 var ccCommitCmd = &cobra.Command{
-	Use:   "commit",
-	Short: "Commit chaincode definition to the channel",
+	Use:     "commit",
+	Short:   "Commit chaincode definition to the channel",
 	Example: `  nanayam chaincode commit --name basic --channel mychannel --peer peer0.org1.nanayam.com:7051 --peer peer0.org2.nanayam.com:9051`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("name")

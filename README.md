@@ -36,6 +36,13 @@ Nanayam is a **private, permissioned Web3 ledger** built on [Hyperledger Fabric]
 curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
 ```
 
+Check for updates later with:
+
+```bash
+nanayam upgrade --check
+nanayam upgrade
+```
+
 Then run:
 ```bash
 nanayam prerequisites --auto    # Install Docker, Fabric binaries, etc.
@@ -123,9 +130,31 @@ curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh |
 # With Fabric binaries + prerequisites
 curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash -s -- --with-fabric --setup
 
+# Reinstall the current release explicitly
+curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash -s -- --refresh
+
 # Or build from source
 make build
 make install
+
+# Or package release archives locally
+make release-assets
+```
+
+### Upgrade and Local Refresh
+
+```bash
+# Check whether a newer release exists
+nanayam upgrade --check
+
+# Download and install the latest release
+nanayam upgrade
+
+# Reinstall the current release
+nanayam upgrade --refresh
+
+# Build from a local checkout and refresh the installed CLI
+nanayam upgrade --dev-local --refresh --source /path/to/nanayam
 ```
 
 ---

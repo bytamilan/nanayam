@@ -143,8 +143,8 @@ var channelJoinCmd = &cobra.Command{
 }
 
 var channelUpdateAnchorCmd = &cobra.Command{
-	Use:   "update-anchor",
-	Short: "Update anchor peers for an organization",
+	Use:     "update-anchor",
+	Short:   "Update anchor peers for an organization",
 	Example: `  nanayam channel update-anchor --name mychannel --org Org1MSP`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("name")

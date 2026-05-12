@@ -10,8 +10,14 @@ export async function POST(req: NextRequest) {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
         });
-        const data = await res.json();
-        if (!res.ok) {
+        const text = await res.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch {
+            return NextResponse.json({ error: 'Gateway returned non-JSON', raw: text.slice(0, 500) }, { status: 502 });
+        }
+        if (!res.ok || !data.token) {
             return NextResponse.json(data, { status: res.status });
         }
         const response = NextResponse.json({ success: true });

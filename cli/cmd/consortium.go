@@ -137,8 +137,8 @@ var consortiumConnectCmd = &cobra.Command{
 }
 
 var consortiumJoinChannelCmd = &cobra.Command{
-	Use:   "join-channel",
-	Short: "Join an existing channel from a consortium",
+	Use:     "join-channel",
+	Short:   "Join an existing channel from a consortium",
 	Example: `  nanayam consortium join-channel --name mychannel --block ./mychannel.block`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		name, _ := cmd.Flags().GetString("name")

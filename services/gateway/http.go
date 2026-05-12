@@ -431,6 +431,15 @@ func (s *RESTServer) register(mux *http.ServeMux) {
 		writeJSON(w, http.StatusOK, resp)
 	})))
 
+	// Config (no auth)
+	mux.HandleFunc("/v1/Config", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"signupEnabled": s.authStore.IsSignupEnabled(),
+			"channel":       s.cfg.ChannelName,
+			"chaincode":     s.cfg.ChaincodeName,
+		})
+	}))
+
 	// Health check (no auth)
 	mux.HandleFunc("/health", corsMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})

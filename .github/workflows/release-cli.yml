@@ -1,0 +1,62 @@
+name: Build Nanayam CLI Releases
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version label to package (defaults to current tag or git describe)
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-release-assets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: cli/go.mod
+
+      - name: Resolve version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            version="${{ github.event.inputs.version }}"
+          elif [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+          else
+            version="$(git describe --tags --always --dirty)"
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+      - name: Build packaged release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          make release-assets VERSION='${{ steps.version.outputs.version }}'
+
+      - name: Upload packaged artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nanayam-cli-${{ steps.version.outputs.version }}
+          path: build/release/*
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/release/*

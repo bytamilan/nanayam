@@ -1,9 +1,46 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import SignupForm from '@/components/auth/SignupForm';
 
-export const dynamic = 'force-dynamic';
-
 export default function SignupPage() {
+    const [config, setConfig] = useState<{ signupEnabled?: boolean; error?: string } | null>(null);
+
+    useEffect(() => {
+        fetch('/api/config')
+            .then((r) => r.json())
+            .then(setConfig)
+            .catch(() => setConfig({ signupEnabled: false }));
+    }, []);
+
+    if (!config) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+                <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">
+                    <p className="text-sm text-slate-500">Loading…</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (!config.signupEnabled) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
+                <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg text-center">
+                    <h1 className="text-2xl font-semibold text-slate-900">Registration Closed</h1>
+                    <p className="mt-2 text-sm text-slate-500">
+                        Signup is currently disabled. Contact your administrator.
+                    </p>
+                    {config.error && <p className="mt-2 text-xs text-red-500">{config.error}</p>}
+                    <Link href="/login" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
+                        Back to login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4">
             <div className="w-full max-w-sm rounded-xl bg-white p-8 shadow-lg">

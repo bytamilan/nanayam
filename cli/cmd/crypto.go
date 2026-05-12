@@ -85,21 +85,21 @@ var cryptoGenerateCmd = &cobra.Command{
 
 			// Try basic profiles
 			profiles := []struct {
-				name      string
-				genesis   string
-				channel   string
+				name       string
+				genesis    string
+				channel    string
 				anchorOrgs []string
 			}{
 				{
-					name:      "TwoOrgsOrdererGenesis",
-					genesis:   "genesis.block",
-					channel:   "mychannel",
+					name:       "TwoOrgsOrdererGenesis",
+					genesis:    "genesis.block",
+					channel:    "mychannel",
 					anchorOrgs: []string{"Org1MSP", "Org2MSP"},
 				},
 				{
-					name:      "ComplaintOrdererGenesis",
-					genesis:   "genesis.block",
-					channel:   "complaint-channel",
+					name:       "ComplaintOrdererGenesis",
+					genesis:    "genesis.block",
+					channel:    "complaint-channel",
 					anchorOrgs: []string{"ACBMSP", "DeptMSP", "OversightMSP", "JudiciaryMSP"},
 				},
 			}

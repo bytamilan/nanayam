@@ -1,10 +1,11 @@
 # Nanayam Makefile
 # Unified build system for the nanayam CLI and services
 
-.PHONY: all build install test clean lint
+.PHONY: all build install test clean lint build-all release-assets
 
 BINARY_NAME=nanayam
 BUILD_DIR=./build
+RELEASE_DIR=$(BUILD_DIR)/release
 CLI_DIR=./cli
 GATEWAY_DIR=./services/gateway
 CONSOLE_DIR=./apps/operator-console
@@ -42,6 +43,32 @@ build-all:
 	cd $(CLI_DIR) && GOOS=linux GOARCH=arm64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(BINARY_NAME)-linux-arm64 .
 	cd $(CLI_DIR) && GOOS=windows GOARCH=amd64 go build $(LDFLAGS) -o ../$(BUILD_DIR)/$(BINARY_NAME)-windows-amd64.exe .
 	@echo "Binaries built in $(BUILD_DIR)/"
+
+## release-assets: Build packaged release archives for install/upgrade flows
+release-assets:
+	@echo "Building packaged release assets for $(VERSION)..."
+	rm -rf $(RELEASE_DIR)
+	mkdir -p $(RELEASE_DIR)
+	@set -e; \
+	for platform in darwin/amd64 darwin/arm64 linux/amd64 linux/arm64 windows/amd64; do \
+		GOOS=$${platform%/*}; \
+		GOARCH=$${platform#*/}; \
+		PACKAGE_DIR="$(RELEASE_DIR)/package-$${GOOS}-$${GOARCH}"; \
+		ARCHIVE_BASENAME="$(BINARY_NAME)_$(VERSION)_$${GOOS}_$${GOARCH}"; \
+		BINARY_FILE="$(BINARY_NAME)"; \
+		if [ "$$GOOS" = "windows" ]; then BINARY_FILE="$(BINARY_NAME).exe"; fi; \
+		rm -rf "$$PACKAGE_DIR"; \
+		mkdir -p "$$PACKAGE_DIR"; \
+		( cd $(CLI_DIR) && GOOS=$$GOOS GOARCH=$$GOARCH go build $(LDFLAGS) -o "../$$PACKAGE_DIR/$$BINARY_FILE" . ); \
+		if [ "$$GOOS" = "windows" ]; then \
+			( cd "$$PACKAGE_DIR" && zip -q "$(abspath $(RELEASE_DIR))/$$ARCHIVE_BASENAME.zip" "$$BINARY_FILE" ); \
+		else \
+			tar -czf "$(RELEASE_DIR)/$$ARCHIVE_BASENAME.tar.gz" -C "$$PACKAGE_DIR" "$$BINARY_FILE"; \
+		fi; \
+		rm -rf "$$PACKAGE_DIR"; \
+		printf '%s\n' "Created $$ARCHIVE_BASENAME"; \
+	done
+	@echo "Release assets built in $(RELEASE_DIR)/"
 
 ## gateway: Build the Go gateway service
 gateway:

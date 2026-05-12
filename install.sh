@@ -15,6 +15,7 @@ REPO="bytamilan/nanayam"
 BINARY_NAME="nanayam"
 INSTALL_DIR="${HOME}/.nanayam/bin"
 FABRIC_BIN_DIR="${HOME}/.nanayam/fabric-bin"
+RELEASE_BASE_URL="${NANAYAM_RELEASE_BASE_URL:-https://github.com/${REPO}/releases/download}"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -31,12 +32,18 @@ log_err()   { echo -e "${RED}[ERR]${NC} $1"; }
 WITH_FABRIC=false
 SETUP=false
 VERSION="latest"
+DEV_LOCAL=false
+REFRESH=false
+SOURCE_PATH=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --with-fabric) WITH_FABRIC=true; shift ;;
         --setup) SETUP=true; shift ;;
         --version) VERSION="$2"; shift 2 ;;
+        --dev-local) DEV_LOCAL=true; shift ;;
+        --refresh) REFRESH=true; shift ;;
+        --source) SOURCE_PATH="$2"; shift 2 ;;
         *) shift ;;
     esac
 done
@@ -49,12 +56,10 @@ detect_platform() {
         aarch64|arm64) arch="arm64" ;;
         *) log_err "Unsupported architecture: ${arch}"; exit 1 ;;
     esac
-    echo "${os}-${arch}"
+    echo "${os} ${arch}"
 }
 
-download_binary() {
-    local platform="$1"
-    local dest="$2"
+resolve_version() {
     local tag="${VERSION}"
 
     if [[ "${tag}" == "latest" ]]; then
@@ -63,15 +68,107 @@ download_binary() {
             log_err "Could not determine latest release version"
             exit 1
         fi
+    elif [[ "${tag}" != v* ]]; then
+        tag="v${tag}"
     fi
 
-    local url="https://github.com/${REPO}/releases/download/${tag}/${BINARY_NAME}-${platform}"
-    log_info "Downloading ${BINARY_NAME} ${tag} for ${platform}..."
+    echo "${tag}"
+}
+
+asset_name() {
+    local tag="$1"
+    local os="$2"
+    local arch="$3"
+    local ext="tar.gz"
+    if [[ "${os}" == "windows" ]]; then
+        ext="zip"
+    fi
+    echo "${BINARY_NAME}_${tag}_${os}_${arch}.${ext}"
+}
+
+release_url() {
+    local tag="$1"
+    local asset="$2"
+    echo "${RELEASE_BASE_URL%/}/${tag}/${asset}"
+}
+
+get_installed_version() {
+    local binary_path="$1"
+    if [[ -x "${binary_path}" ]]; then
+        "${binary_path}" version 2>/dev/null | awk '/^nanayam version / {print $3; exit}' || true
+    fi
+}
+
+download_binary() {
+    local os="$1"
+    local arch="$2"
+    local dest="$3"
+    local tag="$4"
+    local asset
+    local url
+    local tmp_dir
+
+    asset=$(asset_name "${tag}" "${os}" "${arch}")
+    url=$(release_url "${tag}" "${asset}")
+
+    log_info "Downloading ${BINARY_NAME} ${tag} for ${os}/${arch}..."
     log_info "  → ${url}"
 
-    curl -fsSL "${url}" -o "${dest}"
+    tmp_dir=$(mktemp -d)
+
+    curl -fsSL "${url}" -o "${tmp_dir}/${asset}"
+    tar -xzf "${tmp_dir}/${asset}" -C "${tmp_dir}"
+    mv "${tmp_dir}/${BINARY_NAME}" "${dest}"
     chmod +x "${dest}"
+    rm -rf "${tmp_dir}"
     log_ok "Binary downloaded to ${dest}"
+}
+
+resolve_local_source() {
+    local candidate="${SOURCE_PATH}"
+    if [[ -z "${candidate}" ]]; then
+        candidate="$(pwd)"
+    fi
+
+    if [[ -f "${candidate}/cli/go.mod" ]]; then
+        echo "${candidate}"
+        return 0
+    fi
+
+    if [[ "$(basename "${candidate}")" == "cli" && -f "${candidate}/go.mod" ]]; then
+        dirname "${candidate}"
+        return 0
+    fi
+
+    log_err "Could not find a Nanayam repository. Use --source /path/to/nanayam with --dev-local."
+    exit 1
+}
+
+build_local_binary() {
+    local dest="$1"
+    local repo_root="$2"
+    local build_version
+    local build_commit
+    local build_date
+
+    if ! command -v go >/dev/null 2>&1; then
+        log_err "Go is required for --dev-local installs"
+        exit 1
+    fi
+
+    build_version=$(git -C "${repo_root}" describe --tags --always --dirty 2>/dev/null || echo "dev-local")
+    build_commit=$(git -C "${repo_root}" rev-parse --short HEAD 2>/dev/null || echo "local")
+    build_date=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+    log_info "Building local Nanayam CLI from ${repo_root}..."
+    (
+        cd "${repo_root}/cli"
+        go build \
+          -ldflags "-X github.com/bytamilan/nanayam/cli/cmd.version=${build_version} -X github.com/bytamilan/nanayam/cli/cmd.commit=${build_commit} -X github.com/bytamilan/nanayam/cli/cmd.date=${build_date}" \
+          -o "${dest}" .
+    )
+    chmod +x "${dest}"
+    log_ok "Local build installed to ${dest}"
 }
 
 add_to_path() {
@@ -82,16 +179,15 @@ add_to_path() {
         *) shell_cfg="${HOME}/.profile" ;;
     esac
 
-    if [[ -f "${shell_cfg}" ]]; then
-        if ! grep -q "\.nanayam/bin" "${shell_cfg}"; then
-            echo "" >> "${shell_cfg}"
-            echo "# Nanayam CLI" >> "${shell_cfg}"
-            echo 'export PATH="$HOME/.nanayam/bin:$PATH"' >> "${shell_cfg}"
-            log_ok "Added ~/.nanayam/bin to PATH in ${shell_cfg}"
-            log_warn "Run 'source ${shell_cfg}' or restart your terminal to apply PATH changes"
-        else
-            log_info "~/.nanayam/bin already in PATH"
-        fi
+    touch "${shell_cfg}"
+    if ! grep -q "\.nanayam/bin" "${shell_cfg}"; then
+        echo "" >> "${shell_cfg}"
+        echo "# Nanayam CLI" >> "${shell_cfg}"
+        echo 'export PATH="$HOME/.nanayam/bin:$PATH"' >> "${shell_cfg}"
+        log_ok "Added ~/.nanayam/bin to PATH in ${shell_cfg}"
+        log_warn "Run 'source ${shell_cfg}' or restart your terminal to apply PATH changes"
+    else
+        log_info "~/.nanayam/bin already in PATH"
     fi
 }
 
@@ -131,18 +227,27 @@ main() {
     echo -e "${BLUE}===============================================${NC}"
     echo ""
 
-    local platform=$(detect_platform)
-    log_info "Detected platform: ${platform}"
+    read -r platform_os platform_arch <<< "$(detect_platform)"
+    log_info "Detected platform: ${platform_os}/${platform_arch}"
 
     mkdir -p "${INSTALL_DIR}"
     local binary_path="${INSTALL_DIR}/${BINARY_NAME}"
+    local target_version=""
+    local current_version=""
 
-    # If running from repo in dev mode, symlink current binary
-    if [[ -n "${NANAYAM_DEV:-}" ]] && command -v go &>/dev/null; then
-        log_info "Dev mode detected — building from source..."
-        (cd "$(dirname "$0")/cli" && go build -o "${binary_path}" .)
+    if [[ "${DEV_LOCAL}" == "true" ]]; then
+        local repo_root
+        repo_root=$(resolve_local_source)
+        build_local_binary "${binary_path}" "${repo_root}"
     else
-        download_binary "${platform}" "${binary_path}"
+        target_version=$(resolve_version)
+        current_version=$(get_installed_version "${binary_path}")
+
+        if [[ -n "${current_version}" && "${current_version}" == "${target_version}" && "${REFRESH}" != "true" ]]; then
+            log_ok "Nanayam ${target_version} is already installed. Use --refresh to reinstall it."
+        else
+            download_binary "${platform_os}" "${platform_arch}" "${binary_path}" "${target_version}"
+        fi
     fi
 
     add_to_path
@@ -164,6 +269,7 @@ main() {
     echo -e "${GREEN}===============================================${NC}"
     echo ""
     echo "Run: nanayam version"
+    echo "Upgrade check: nanayam upgrade --check"
     echo "Help: nanayam --help"
     echo ""
 }

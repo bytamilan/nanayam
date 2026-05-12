@@ -80,10 +80,10 @@ func runUserCreate(cmd *cobra.Command, args []string) error {
 		caURL = fmt.Sprintf("https://localhost:7054")
 		// Try to infer port based on org
 		portMap := map[string]string{
-			"org1": "7054",
-			"acb":  "7054",
-			"org2": "8054",
-			"dept": "8054",
+			"org1":      "7054",
+			"acb":       "7054",
+			"org2":      "8054",
+			"dept":      "8054",
 			"oversight": "9054",
 			"judiciary": "10054",
 		}
@@ -140,8 +140,8 @@ func runUserCreate(cmd *cobra.Command, args []string) error {
 }
 
 var userEnrollCmd = &cobra.Command{
-	Use:   "enroll",
-	Short: "Enroll an already-registered user identity",
+	Use:     "enroll",
+	Short:   "Enroll an already-registered user identity",
 	Example: `  nanayam user enroll --id alice --secret alicepw --org Org1`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		id, _ := cmd.Flags().GetString("id")

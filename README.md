@@ -137,9 +137,15 @@ curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh |
 make build
 make install
 
+# Or run the full local installer against the current checkout
+make local
+
 # Or package release archives locally
 make release-assets
 ```
+
+If a release archive is not available yet, `install.sh` now falls back to building from source.
+It prefers the current checkout when available, and otherwise clones the repository temporarily.
 
 ### Upgrade and Local Refresh
 

@@ -1,7 +1,7 @@
 # Nanayam Makefile
 # Unified build system for the nanayam CLI and services
 
-.PHONY: all build install test clean lint build-all release-assets
+.PHONY: all build install test clean lint build-all release-assets local
 
 BINARY_NAME=nanayam
 BUILD_DIR=./build
@@ -32,6 +32,10 @@ install: build
 	mkdir -p $(HOME)/.nanayam/bin
 	cp $(BUILD_DIR)/$(BINARY_NAME) $(HOME)/.nanayam/bin/
 	@echo "Run 'export PATH=\"$$HOME/.nanayam/bin:$$PATH\"' or restart your terminal"
+
+## local: Install the current checkout using the full installer flow
+local:
+	bash ./install.sh --dev-local --refresh --source "$(CURDIR)"
 
 ## build-all: Cross-compile for all platforms
 build-all:

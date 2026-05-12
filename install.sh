@@ -9,9 +9,14 @@
 #   curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash -s -- --with-fabric --setup
 # =============================================================================
 
+if [ -z "${BASH_VERSION:-}" ]; then
+    exec bash "$0" "$@"
+fi
+
 set -euo pipefail
 
 REPO="bytamilan/nanayam"
+REPO_URL="https://github.com/${REPO}.git"
 BINARY_NAME="nanayam"
 INSTALL_DIR="${HOME}/.nanayam/bin"
 FABRIC_BIN_DIR="${HOME}/.nanayam/fabric-bin"
@@ -23,10 +28,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m'
 
-log_info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
-log_ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
-log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
-log_err()   { echo -e "${RED}[ERR]${NC} $1"; }
+log_info()  { printf '%b\n' "${BLUE}[INFO]${NC} $1"; }
+log_ok()    { printf '%b\n' "${GREEN}[OK]${NC} $1"; }
+log_warn()  { printf '%b\n' "${YELLOW}[WARN]${NC} $1"; }
+log_err()   { printf '%b\n' "${RED}[ERR]${NC} $1"; }
 
 # Parse arguments
 WITH_FABRIC=false
@@ -61,12 +66,14 @@ detect_platform() {
 
 resolve_version() {
     local tag="${VERSION}"
+    local latest_tag=""
 
     if [[ "${tag}" == "latest" ]]; then
-        tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
-        if [[ -z "${tag}" ]]; then
-            log_err "Could not determine latest release version"
-            exit 1
+        latest_tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' || true)
+        if [[ -n "${latest_tag}" ]]; then
+            tag="${latest_tag}"
+        else
+            log_warn "Could not determine the latest published release; will fall back to a source build if needed." >&2
         fi
     elif [[ "${tag}" != v* ]]; then
         tag="v${tag}"
@@ -99,6 +106,79 @@ get_installed_version() {
     fi
 }
 
+find_repo_checkout() {
+    local script_dir=""
+    local candidate=""
+
+    if script_dir=$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" 2>/dev/null && pwd); then
+        :
+    else
+        script_dir=""
+    fi
+
+    for candidate in "${SOURCE_PATH:-}" "$(pwd)" "${script_dir}" "$(dirname "${script_dir}")"; do
+        [[ -n "${candidate}" ]] || continue
+
+        if [[ -f "${candidate}/cli/go.mod" ]]; then
+            echo "${candidate}"
+            return 0
+        fi
+
+        if [[ "$(basename "${candidate}")" == "cli" && -f "${candidate}/go.mod" ]]; then
+            dirname "${candidate}"
+            return 0
+        fi
+    done
+
+    return 1
+}
+
+clone_repo_ref() {
+    local dest_dir="$1"
+    local ref="$2"
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_err "git is required for source-build fallback installs"
+        exit 1
+    fi
+
+    if [[ -n "${ref}" && "${ref}" != "latest" ]]; then
+        git clone --depth 1 --branch "${ref}" "${REPO_URL}" "${dest_dir}" >/dev/null 2>&1 || {
+            log_err "Could not clone ${REPO_URL} at ref ${ref}"
+            exit 1
+        }
+    else
+        git clone --depth 1 "${REPO_URL}" "${dest_dir}" >/dev/null 2>&1 || {
+            log_err "Could not clone ${REPO_URL}"
+            exit 1
+        }
+    fi
+}
+
+build_from_source_fallback() {
+    local dest="$1"
+    local tag="$2"
+    local repo_root=""
+    local tmp_dir=""
+
+    if repo_root=$(find_repo_checkout); then
+        log_warn "Release asset not found; building from local checkout at ${repo_root} instead."
+        build_local_binary "${dest}" "${repo_root}"
+        return 0
+    fi
+
+    if ! command -v go >/dev/null 2>&1; then
+        log_err "Release asset is unavailable and Go is required for source-build fallback installs"
+        exit 1
+    fi
+
+    tmp_dir=$(mktemp -d)
+    log_warn "Release asset not found; cloning ${REPO} and building from source temporarily."
+    clone_repo_ref "${tmp_dir}/repo" "${tag}"
+    build_local_binary "${dest}" "${tmp_dir}/repo"
+    rm -rf "${tmp_dir}"
+}
+
 download_binary() {
     local os="$1"
     local arch="$2"
@@ -107,6 +187,9 @@ download_binary() {
     local asset
     local url
     local tmp_dir
+    local http_code
+    local curl_status
+    local curl_error
 
     asset=$(asset_name "${tag}" "${os}" "${arch}")
     url=$(release_url "${tag}" "${asset}")
@@ -116,7 +199,28 @@ download_binary() {
 
     tmp_dir=$(mktemp -d)
 
-    curl -fsSL "${url}" -o "${tmp_dir}/${asset}"
+    set +e
+    http_code=$(curl -sSL -w "%{http_code}" -o "${tmp_dir}/${asset}" "${url}" 2>"${tmp_dir}/curl.err")
+    curl_status=$?
+    set -e
+
+    if [[ -f "${tmp_dir}/curl.err" ]]; then
+        curl_error=$(tr '\n' ' ' < "${tmp_dir}/curl.err" | sed -E 's/[[:space:]]+/ /g; s/[[:space:]]+$//')
+    else
+        curl_error=""
+    fi
+
+    if [[ ${curl_status} -ne 0 || "${http_code}" != "200" ]]; then
+        rm -rf "${tmp_dir}"
+        if [[ -n "${curl_error}" ]]; then
+            log_warn "Release download failed (${curl_error}); falling back to a source build."
+        else
+            log_warn "Release download failed (HTTP ${http_code:-000}); falling back to a source build."
+        fi
+        build_from_source_fallback "${dest}" "${tag}"
+        return 0
+    fi
+
     tar -xzf "${tmp_dir}/${asset}" -C "${tmp_dir}"
     mv "${tmp_dir}/${BINARY_NAME}" "${dest}"
     chmod +x "${dest}"
@@ -125,18 +229,10 @@ download_binary() {
 }
 
 resolve_local_source() {
-    local candidate="${SOURCE_PATH}"
-    if [[ -z "${candidate}" ]]; then
-        candidate="$(pwd)"
-    fi
+    local candidate=""
 
-    if [[ -f "${candidate}/cli/go.mod" ]]; then
+    if candidate=$(find_repo_checkout); then
         echo "${candidate}"
-        return 0
-    fi
-
-    if [[ "$(basename "${candidate}")" == "cli" && -f "${candidate}/go.mod" ]]; then
-        dirname "${candidate}"
         return 0
     fi
 
@@ -222,9 +318,9 @@ download_fabric_binaries() {
 }
 
 main() {
-    echo -e "${BLUE}===============================================${NC}"
-    echo -e "${BLUE}  Nanayam CLI Installer${NC}"
-    echo -e "${BLUE}===============================================${NC}"
+    printf '%b\n' "${BLUE}===============================================${NC}"
+    printf '%b\n' "${BLUE}  Nanayam CLI Installer${NC}"
+    printf '%b\n' "${BLUE}===============================================${NC}"
     echo ""
 
     read -r platform_os platform_arch <<< "$(detect_platform)"
@@ -264,9 +360,9 @@ main() {
     fi
 
     echo ""
-    echo -e "${GREEN}===============================================${NC}"
-    echo -e "${GREEN}  Installation Complete!${NC}"
-    echo -e "${GREEN}===============================================${NC}"
+    printf '%b\n' "${GREEN}===============================================${NC}"
+    printf '%b\n' "${GREEN}  Installation Complete!${NC}"
+    printf '%b\n' "${GREEN}===============================================${NC}"
     echo ""
     echo "Run: nanayam version"
     echo "Upgrade check: nanayam upgrade --check"

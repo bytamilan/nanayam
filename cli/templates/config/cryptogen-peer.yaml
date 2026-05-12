@@ -1,0 +1,15 @@
+OrdererOrgs:
+  - Name: OrdererOrg
+    Domain: {{.Domain}}
+    EnableNodeOUs: true
+    Specs:
+      - Hostname: orderer
+
+PeerOrgs:
+  - Name: {{.OrgName}}
+    Domain: {{.OrgDomain}}
+    EnableNodeOUs: true
+    Template:
+      Count: {{.PeerCount}}
+    Users:
+      Count: {{.UserCount}}

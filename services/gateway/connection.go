@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/hyperledger/fabric-gateway/pkg/client"
 	"github.com/hyperledger/fabric-gateway/pkg/identity"
@@ -16,23 +17,35 @@ import (
 
 // GatewayConfig holds all parameters needed to connect to the Fabric network.
 type GatewayConfig struct {
-	MSP_ID         string
-	CryptoPath     string
-	PeerEndpoint   string
-	TLSCertPath    string
-	ChannelName    string
-	ChaincodeName  string
+	MSP_ID          string
+	CryptoPath      string
+	PeerEndpoint    string
+	TLSCertPath     string
+	ChannelName     string
+	ChaincodeName   string
+	IdentityCert    string
+	IdentityKey     string
+	gateway         *client.Gateway // stored after Connect for ledger queries
 }
 
 // NewGatewayFromEnv creates a GatewayConfig from environment variables.
 func NewGatewayFromEnv() *GatewayConfig {
+	mspID := getEnv("MSP_ID", "Org1MSP")
+	cryptoPath := getEnv("CRYPTO_PATH", "./crypto-config/peerOrganizations/org1.nanayam.com")
+
+	// For complaint system, default identity paths point to ACB
+	defaultCert := filepath.Join(cryptoPath, "users", fmt.Sprintf("Admin@%s", filepath.Base(cryptoPath)), "msp", "signcerts", fmt.Sprintf("Admin@%s-cert.pem", filepath.Base(cryptoPath)))
+	defaultKey := filepath.Join(cryptoPath, "users", fmt.Sprintf("Admin@%s", filepath.Base(cryptoPath)), "msp", "keystore", "priv_sk")
+
 	return &GatewayConfig{
-		MSP_ID:        getEnv("MSP_ID", "Org1MSP"),
-		CryptoPath:    getEnv("CRYPTO_PATH", "./crypto-config/peerOrganizations/org1.nanayam.com"),
+		MSP_ID:        mspID,
+		CryptoPath:    cryptoPath,
 		PeerEndpoint:  getEnv("PEER_ENDPOINT", "localhost:7051"),
 		TLSCertPath:   getEnv("TLS_CERT_PATH", "./crypto-config/peerOrganizations/org1.nanayam.com/peers/peer0.org1.nanayam.com/tls/ca.crt"),
 		ChannelName:   getEnv("FABRIC_CHANNEL", "mychannel"),
 		ChaincodeName: getEnv("FABRIC_CHAINCODE", "basic"),
+		IdentityCert:  getEnv("IDENTITY_CERT", defaultCert),
+		IdentityKey:   getEnv("IDENTITY_KEY", defaultKey),
 	}
 }
 
@@ -72,20 +85,28 @@ func (cfg *GatewayConfig) Connect() (*client.Gateway, *grpc.ClientConn, error) {
 	}
 
 	// 3. Load identity (certificate)
-	certPath := filepath.Join(cfg.CryptoPath, "users", "Admin@org1.nanayam.com", "msp", "signcerts", "Admin@org1.nanayam.com-cert.pem")
-	certPEM, err = os.ReadFile(certPath)
+	certPEM, err = os.ReadFile(cfg.IdentityCert)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read identity cert: %w", err)
 	}
 
-	id, err := identity.NewX509Identity(cfg.MSP_ID, string(certPEM))
+	block, _ = pem.Decode(certPEM)
+	if block == nil {
+		return nil, nil, fmt.Errorf("failed to decode identity cert PEM")
+	}
+
+	identityCert, err := x509.ParseCertificate(block.Bytes)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parse identity cert: %w", err)
+	}
+
+	id, err := identity.NewX509Identity(cfg.MSP_ID, identityCert)
 	if err != nil {
 		return nil, nil, fmt.Errorf("new identity: %w", err)
 	}
 
 	// 4. Load private key for signing
-	keyPath := filepath.Join(cfg.CryptoPath, "users", "Admin@org1.nanayam.com", "msp", "keystore", "priv_sk")
-	keyPEM, err := os.ReadFile(keyPath)
+	keyPEM, err := os.ReadFile(cfg.IdentityKey)
 	if err != nil {
 		return nil, nil, fmt.Errorf("read private key: %w", err)
 	}
@@ -100,15 +121,16 @@ func (cfg *GatewayConfig) Connect() (*client.Gateway, *grpc.ClientConn, error) {
 		id,
 		client.WithSign(sign),
 		client.WithClientConnection(conn),
-		client.WithEvaluateTimeout(5),
-		client.WithEndorseTimeout(15),
-		client.WithSubmitTimeout(5),
-		client.WithCommitStatusTimeout(60),
+		client.WithEvaluateTimeout(30*time.Second),
+		client.WithEndorseTimeout(30*time.Second),
+		client.WithSubmitTimeout(30*time.Second),
+		client.WithCommitStatusTimeout(60*time.Second),
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("connect gateway: %w", err)
 	}
 
+	cfg.gateway = gw
 	return gw, conn, nil
 }
 

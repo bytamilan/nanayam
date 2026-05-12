@@ -33,6 +33,15 @@ func main() {
 
 	log.Println("Connected to Fabric network successfully")
 
+	// Initialize auth store
+	authStore := NewAuthStore()
+	authStore.SeedAdmin()
+	if authStore.IsSignupEnabled() {
+		log.Println("User registration is ENABLED")
+	} else {
+		log.Println("User registration is DISABLED")
+	}
+
 	handler := NewFabricHandler(gw, cfg.ChannelName, cfg.ChaincodeName)
 
 	// 1) Start gRPC server
@@ -51,8 +60,13 @@ func main() {
 	}()
 
 	// 2) Start HTTP REST server
+	rest := &RESTServer{
+		handler:   handler,
+		authStore: authStore,
+		cfg:       cfg,
+	}
 	mux := http.NewServeMux()
-	registerRESTHandlers(mux, handler)
+	rest.register(mux)
 
 	httpServer := &http.Server{
 		Addr:    *httpPort,

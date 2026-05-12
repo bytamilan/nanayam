@@ -1,0 +1,61 @@
+# =============================================================================
+# Anti-Corruption Complaint System - Application Services
+# =============================================================================
+# Runs the Go gateway (connected as ACB) + Next.js operator console.
+# Both connect to the 4-org complaint network via the 'nanayam' Docker network.
+# =============================================================================
+
+version: "3.7"
+
+networks:
+  nanayam:
+    external: true
+    name: nanayam
+
+services:
+  # ---------------------------------------------------------------------------
+  # Go gRPC / REST Gateway (connected as ACB)
+  # ---------------------------------------------------------------------------
+  gateway:
+    container_name: nanayam-gateway
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - GATEWAY_GRPC_PORT=50051
+      - GATEWAY_HTTP_PORT=8080
+      - FABRIC_CHANNEL=complaint-channel
+      - FABRIC_CHAINCODE=complaint
+      - MSP_ID=ACBMSP
+      - CRYPTO_PATH=/app/crypto
+      - PEER_ENDPOINT=peer0.acb.nanayam.com:7051
+      - TLS_CERT_PATH=/app/crypto/peers/peer0.acb.nanayam.com/tls/ca.crt
+      - IDENTITY_CERT=/app/crypto/users/Admin@acb.nanayam.com/msp/signcerts/Admin@acb.nanayam.com-cert.pem
+      - IDENTITY_KEY=/app/crypto/users/Admin@acb.nanayam.com/msp/keystore/priv_sk
+    ports:
+      - "50051:50051"
+      - "8080:8080"
+    volumes:
+      - ../crypto-config/peerOrganizations/acb.nanayam.com:/app/crypto:ro
+    networks:
+      - nanayam
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Operator Console (Next.js)
+  # ---------------------------------------------------------------------------
+  console:
+    container_name: nanayam-console
+    build:
+      context: ../apps/operator-console
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway:8080
+      - GATEWAY_URL=http://gateway:8080
+    ports:
+      - "3000:3000"
+    networks:
+      - nanayam
+    depends_on:
+      - gateway
+    restart: unless-stopped

@@ -1,0 +1,119 @@
+# =============================================================================
+# Anti-Corruption Complaint System - Connection Profile
+# =============================================================================
+# Used by the Go gateway service to connect to the 4-org complaint network.
+# Default identity: ACB Admin.
+# =============================================================================
+
+name: "complaint-network"
+version: "1.0"
+client:
+  organization: ACB
+  connection:
+    timeout:
+      peer:
+        endorser: "300"
+
+organizations:
+  ACB:
+    mspid: ACBMSP
+    peers:
+      - peer0.acb.nanayam.com
+    certificateAuthorities:
+      - ca.acb.nanayam.com
+
+  Dept:
+    mspid: DeptMSP
+    peers:
+      - peer0.dept.nanayam.com
+    certificateAuthorities:
+      - ca.dept.nanayam.com
+
+  Oversight:
+    mspid: OversightMSP
+    peers:
+      - peer0.oversight.nanayam.com
+    certificateAuthorities:
+      - ca.oversight.nanayam.com
+
+  Judiciary:
+    mspid: JudiciaryMSP
+    peers:
+      - peer0.judiciary.nanayam.com
+    certificateAuthorities:
+      - ca.judiciary.nanayam.com
+
+orderers:
+  orderer.nanayam.com:
+    url: grpcs://orderer.nanayam.com:7050
+    grpcOptions:
+      ssl-target-name-override: orderer.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/msp/tlscacerts/tlsca.nanayam.com-cert.pem
+
+peers:
+  peer0.acb.nanayam.com:
+    url: grpcs://peer0.acb.nanayam.com:7051
+    grpcOptions:
+      ssl-target-name-override: peer0.acb.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/acb.nanayam.com/peers/peer0.acb.nanayam.com/tls/ca.crt
+
+  peer0.dept.nanayam.com:
+    url: grpcs://peer0.dept.nanayam.com:9051
+    grpcOptions:
+      ssl-target-name-override: peer0.dept.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/dept.nanayam.com/peers/peer0.dept.nanayam.com/tls/ca.crt
+
+  peer0.oversight.nanayam.com:
+    url: grpcs://peer0.oversight.nanayam.com:10051
+    grpcOptions:
+      ssl-target-name-override: peer0.oversight.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/oversight.nanayam.com/peers/peer0.oversight.nanayam.com/tls/ca.crt
+
+  peer0.judiciary.nanayam.com:
+    url: grpcs://peer0.judiciary.nanayam.com:11051
+    grpcOptions:
+      ssl-target-name-override: peer0.judiciary.nanayam.com
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/judiciary.nanayam.com/peers/peer0.judiciary.nanayam.com/tls/ca.crt
+
+certificateAuthorities:
+  ca.acb.nanayam.com:
+    url: https://ca.acb.nanayam.com:7054
+    caName: ca-acb
+    tlsCACerts:
+      path: ../crypto-config/peerOrganizations/acb.nanayam.com/ca/ca.acb.nanayam.com-cert.pem
+    registrar:
+      enrollId: admin
+      enrollSecret: adminpw
+    httpOptions:
+      verify: false
+
+channels:
+  complaint-channel:
+    orderers:
+      - orderer.nanayam.com
+    peers:
+      peer0.acb.nanayam.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.dept.nanayam.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.oversight.nanayam.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true
+      peer0.judiciary.nanayam.com:
+        endorsingPeer: true
+        chaincodeQuery: true
+        ledgerQuery: true
+        eventSource: true

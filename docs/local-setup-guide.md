@@ -24,6 +24,30 @@ sudo usermod -aG docker $USER
 
 ## Quick Start (One-Liner Style)
 
+### CLI-first workflow
+
+```bash
+# 1. Clone (if you haven't already)
+git clone https://github.com/bytamilan/nanayam.git
+cd nanayam
+
+# 2. Install prerequisites and Fabric binaries
+nanayam prerequisites --auto
+
+# 3. Start the built-in basic network
+nanayam network up
+
+# 4. Or start the complaint network
+nanayam network up --profile complaint
+
+# 5. Or use an explicit compose file
+nanayam network up --config docker/fabric-network.yaml
+```
+
+For the built-in basic and complaint networks, `nanayam network up` automatically runs the matching setup script if required certificates or channel artifacts are missing. For custom compose files, you must generate those artifacts yourself.
+
+### Classic script workflow
+
 ```bash
 # 1. Clone (if you haven't already)
 git clone https://github.com/bytamilan/nanayam.git
@@ -88,6 +112,16 @@ This script starts the actual Fabric infrastructure:
 3. **Joins peers** to `mychannel`.
 
 4. **Updates anchor peers** for both organizations.
+
+CLI equivalent:
+
+```bash
+nanayam network up
+# or
+nanayam network up --config docker/fabric-network.yaml
+```
+
+If the built-in Fabric certificates or channel artifacts are missing, the CLI will run `./scripts/setup-fabric.sh` automatically before starting the containers.
 
 **Verify it's running:**
 ```bash
@@ -177,6 +211,12 @@ docker-compose -f docker/apps.yaml down
 ---
 
 ## Troubleshooting
+
+### `nanayam network up --config docker/fabric-network.yaml` reports missing artifacts
+
+For the built-in Fabric network, Nanayam now auto-runs `./scripts/setup-fabric.sh` when possible. If that setup step fails, fix the underlying problem (usually Docker, missing Fabric binaries, or a failed `cryptogen/configtxgen` run) and retry.
+
+For custom compose files, generate the mounted crypto/channel artifacts manually before starting the network.
 
 ### "Docker network 'nanayam' not found"
 Run `./scripts/start-fabric.sh` first. The `nanayam` network is created by the Fabric compose file.

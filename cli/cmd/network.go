@@ -8,9 +8,13 @@ import (
 	"strings"
 
 	"github.com/bytamilan/nanayam/cli/internal/docker"
+	"github.com/bytamilan/nanayam/cli/internal/fabric"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
+
+var composePrerequisitesValidator = docker.ValidateComposePrerequisites
+var networkArtifactGenerator = autoGenerateNetworkArtifacts
 
 func init() {
 	rootCmd.AddCommand(networkCmd)
@@ -47,9 +51,21 @@ var networkUpCmd = &cobra.Command{
 			return fmt.Errorf("--profile and --config cannot be used together")
 		}
 
+		cwd, err := os.Getwd()
+		if err != nil {
+			return err
+		}
+
 		composeFiles, targetLabel, err := resolveNetworkUpComposeFiles(profile, config)
 		if err != nil {
 			return err
+		}
+		recovered, setupScript, err := ensureComposePrerequisites(cwd, composeFiles)
+		if err != nil {
+			return err
+		}
+		if recovered {
+			fmt.Printf("%s Generated missing Fabric certificates and artifacts using %s\n", green("✓"), setupScript)
 		}
 
 		fmt.Printf("%s Starting Fabric network (%s)...\n", blue("→"), targetLabel)
@@ -66,10 +82,42 @@ var networkUpCmd = &cobra.Command{
 		fmt.Printf("%s Fabric network is up!\n", green("✓"))
 		fmt.Println()
 		fmt.Println("Next steps:")
-		fmt.Println("  nanayam channel create --name mychannel --profile TwoOrgsChannel")
-		fmt.Println("  nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic")
+		for _, step := range nextStepsForCompose(cwd, composeFiles) {
+			fmt.Printf("  %s\n", step)
+		}
 		return nil
 	},
+}
+
+func nextStepsForCompose(cwd string, composeFiles []string) []string {
+	cryptoConfigFile, err := resolveCryptoConfigForCompose(cwd, composeFiles)
+	if err != nil {
+		return []string{
+			"nanayam channel create --name mychannel --profile TwoOrgsChannel",
+			"nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic",
+		}
+	}
+
+	steps := make([]string, 0, 2)
+	if _, profiles, err := resolveChannelArtifactConfig(cwd, cryptoConfigFile); err == nil && len(profiles) > 0 {
+		steps = append(steps, fmt.Sprintf("nanayam channel create --name %s --profile %s", profiles[0].channel, profiles[0].channelProfile))
+	}
+
+	switch artifactVariantFromFile(filepath.Base(cryptoConfigFile), "crypto-config") {
+	case "complaint":
+		steps = append(steps, "nanayam chaincode package --path ./chaincode/complaint-system --name complaint")
+	case "", "basic", "fabric":
+		steps = append(steps, "nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic")
+	}
+
+	if len(steps) == 0 {
+		return []string{
+			"nanayam channel create --name mychannel --profile TwoOrgsChannel",
+			"nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic",
+		}
+	}
+
+	return steps
 }
 
 func resolveNetworkUpComposeFiles(profile, config string) ([]string, string, error) {
@@ -88,12 +136,7 @@ func resolveNetworkUpComposeFilesFromDir(cwd, profile, config string) ([]string,
 			return nil, "", err
 		}
 
-		composeFiles := []string{composeFile}
-		if appsFile := resolveNetworkAppsFile(composeFile); appsFile != "" {
-			composeFiles = append(composeFiles, appsFile)
-		}
-
-		return composeFiles, fmt.Sprintf("config: %s", filepath.Base(composeFile)), nil
+		return []string{composeFile}, fmt.Sprintf("config: %s", filepath.Base(composeFile)), nil
 	}
 
 	composeFiles, err := docker.FindComposeFilesInDir(cwd, profile)
@@ -108,6 +151,143 @@ func resolveNetworkUpComposeFilesFromDir(cwd, profile, config string) ([]string,
 	}
 
 	return composeFiles, fmt.Sprintf("profile: %s", profile), nil
+}
+
+func ensureComposePrerequisites(cwd string, composeFiles []string) (bool, string, error) {
+	validationErr := composePrerequisitesValidator(composeFiles)
+	needsRefresh, expectedLabel, err := networkArtifactsNeedRefresh(cwd, composeFiles)
+	if err != nil {
+		return false, "", err
+	}
+
+	if validationErr == nil && !needsRefresh {
+		return false, "", nil
+	}
+
+	artifactLabel, err := networkArtifactGenerator(cwd, composeFiles)
+	if err != nil {
+		if validationErr != nil {
+			return false, artifactLabel, fmt.Errorf("compose prerequisites check failed: %w\nAutomatic recovery failed: %w", validationErr, err)
+		}
+		return false, artifactLabel, fmt.Errorf("artifact refresh required for %s\nAutomatic recovery failed: %w", expectedLabel, err)
+	}
+
+	if err := composePrerequisitesValidator(composeFiles); err != nil {
+		return false, artifactLabel, fmt.Errorf("compose prerequisites check failed after automatic recovery (%s): %w", artifactLabel, err)
+	}
+
+	return true, artifactLabel, nil
+}
+
+
+func autoGenerateNetworkArtifacts(cwd string, composeFiles []string) (string, error) {
+	cryptoConfigFile, err := resolveCryptoConfigForCompose(cwd, composeFiles)
+	if err != nil {
+		return "", err
+	}
+
+	if err := generateNetworkArtifacts(cwd, cryptoConfigFile); err != nil {
+		return filepath.Base(cryptoConfigFile), err
+	}
+
+	return filepath.Base(cryptoConfigFile), nil
+}
+
+func generateNetworkArtifacts(cwd, cryptoConfigFile string) error {
+	bins := fabric.NewBinaries()
+	if err := bins.CheckAll(); err != nil {
+		return fmt.Errorf("fabric binaries not found: %w\nRun 'nanayam prerequisites --install-fabric' to download them", err)
+	}
+
+	if err := os.RemoveAll(filepath.Join(cwd, "crypto-config")); err != nil {
+		return fmt.Errorf("clear crypto-config dir: %w", err)
+	}
+	if err := os.RemoveAll(filepath.Join(cwd, "channel-artifacts")); err != nil {
+		return fmt.Errorf("clear channel-artifacts dir: %w", err)
+	}
+
+	output := filepath.Join(cwd, "crypto-config")
+	if err := os.MkdirAll(output, 0755); err != nil {
+		return fmt.Errorf("create crypto-config dir: %w", err)
+	}
+
+	if err := generateCryptoMaterials(bins, cryptoConfigFile, output); err != nil {
+		return fmt.Errorf("generate crypto materials from %s: %w", cryptoConfigFile, err)
+	}
+
+	if err := generateChannelArtifactsForCryptoConfig(bins, cwd, cryptoConfigFile); err != nil {
+		return fmt.Errorf("generate channel artifacts from %s: %w", cryptoConfigFile, err)
+	}
+
+	return nil
+}
+
+func networkArtifactsNeedRefresh(cwd string, composeFiles []string) (bool, string, error) {
+	cryptoConfigFile, err := resolveCryptoConfigForCompose(cwd, composeFiles)
+	if err != nil {
+		return false, "", err
+	}
+
+	expected := artifactSourceLabel(cwd, cryptoConfigFile)
+	actual, err := readArtifactSourceMetadata(cwd)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return true, filepath.Base(cryptoConfigFile), nil
+		}
+		return false, "", fmt.Errorf("read current artifact metadata: %w", err)
+	}
+
+	return actual != expected, filepath.Base(cryptoConfigFile), nil
+}
+
+func resolveCryptoConfigForCompose(cwd string, composeFiles []string) (string, error) {
+	configDir := filepath.Join(cwd, "config")
+	for _, variant := range composeVariantCandidates(primaryNetworkComposeFile(composeFiles)) {
+		for _, candidate := range cryptoConfigCandidatesForVariant(variant) {
+			path := filepath.Join(configDir, candidate)
+			if _, err := os.Stat(path); err == nil {
+				return path, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no matching crypto config found for %s in %s", primaryNetworkComposeFile(composeFiles), configDir)
+}
+
+func primaryNetworkComposeFile(composeFiles []string) string {
+	for _, composeFile := range composeFiles {
+		if strings.Contains(filepath.Base(composeFile), "network") {
+			return composeFile
+		}
+	}
+	if len(composeFiles) > 0 {
+		return composeFiles[0]
+	}
+	return ""
+}
+
+func composeVariantCandidates(composeFile string) []string {
+	base := strings.TrimSuffix(filepath.Base(composeFile), filepath.Ext(composeFile))
+	base = strings.TrimSuffix(base, "-network")
+
+	switch base {
+	case "", "fabric", "basic":
+		return uniqueStrings([]string{"fabric", "basic", ""})
+	default:
+		return uniqueStrings([]string{base})
+	}
+}
+
+func cryptoConfigCandidatesForVariant(variant string) []string {
+	switch variant {
+	case "", "basic", "fabric":
+		return uniqueStrings([]string{
+			"crypto-config-" + variant + ".yaml",
+			"crypto-config.yaml",
+		})
+	default:
+		return uniqueStrings([]string{"crypto-config-" + variant + ".yaml"})
+	}
 }
 
 func resolveNetworkAppsFile(composeFile string) string {

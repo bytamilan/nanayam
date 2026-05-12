@@ -46,10 +46,23 @@ nanayam upgrade
 Then run:
 ```bash
 nanayam prerequisites --auto    # Install Docker, Fabric binaries, etc.
-nanayam network up              # Start the full Fabric network
+nanayam network up              # Start the basic Fabric network
 nanayam channel create --name mychannel --profile TwoOrgsChannel
 nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic
 ```
+
+For the complaint workflow, use:
+
+```bash
+nanayam network up --profile complaint
+```
+
+`nanayam network up` now detects missing built-in Fabric crypto/channel artifacts and runs the matching setup script automatically:
+
+- `fabric-network.yaml` / `apps.yaml` → `./scripts/setup-fabric.sh`
+- `complaint-network.yaml` / `complaint-apps.yaml` → `./scripts/setup-complaint.sh`
+
+When you use `--config`, Nanayam uses only the compose file you specify. Automatic recovery is available for the built-in network configs above; custom compose files must provide their own crypto and channel artifacts.
 
 ### Classic Script Setup
 
@@ -90,7 +103,9 @@ nanayam node stop peer0.org1.nanayam.com
 nanayam node status
 
 # Network orchestration
-nanayam network up --profile basic       # or --profile complaint
+nanayam network up                       # basic network, auto-recovers built-in artifacts if needed
+nanayam network up --profile complaint   # complaint network, auto-recovers built-in artifacts if needed
+nanayam network up --config docker/fabric-network.yaml
 nanayam network down
 nanayam network clean                    # Wipe all data
 
@@ -146,6 +161,24 @@ make release-assets
 
 If a release archive is not available yet, `install.sh` now falls back to building from source.
 It prefers the current checkout when available, and otherwise clones the repository temporarily.
+
+### Network profiles and config files
+
+```bash
+# Built-in profiles
+nanayam network up --profile basic
+nanayam network up --profile complaint
+
+# Explicit compose file (uses only this compose file)
+nanayam network up --config docker/fabric-network.yaml
+nanayam network up --config docker/complaint-network.yaml
+```
+
+Notes:
+
+- Built-in networks can auto-generate missing certificates and channel artifacts during `network up`.
+- Explicit `--config` does **not** auto-attach `apps.yaml` / `complaint-apps.yaml`; start app stacks separately when needed.
+- Custom compose files are validated before startup, but Nanayam does not invent crypto for unknown topologies.
 
 ### Upgrade and Local Refresh
 

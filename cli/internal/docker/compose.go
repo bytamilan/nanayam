@@ -5,7 +5,10 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
+
+	"go.yaml.in/yaml/v3"
 )
 
 // ComposeRunner wraps docker compose commands
@@ -177,6 +180,142 @@ func composeConfigCandidates(baseDir, config string) []string {
 	}
 
 	return candidates
+}
+
+type composeDocument struct {
+	Services map[string]composeService `yaml:"services"`
+}
+
+type composeService struct {
+	Volumes []any `yaml:"volumes"`
+}
+
+// ValidateComposePrerequisites checks that bind-mounted files and directories required
+// by a compose file exist and contain the minimum material expected by Fabric containers.
+func ValidateComposePrerequisites(composeFiles []string) error {
+	var issues []string
+	for _, composeFile := range composeFiles {
+		fileIssues, err := validateComposeFilePrerequisites(composeFile)
+		if err != nil {
+			return err
+		}
+		issues = append(issues, fileIssues...)
+	}
+
+	if len(issues) == 0 {
+		return nil
+	}
+
+	sort.Strings(issues)
+	return fmt.Errorf("missing or incomplete Fabric artifacts:\n  - %s", strings.Join(issues, "\n  - "))
+}
+
+func validateComposeFilePrerequisites(composeFile string) ([]string, error) {
+	content, err := os.ReadFile(composeFile)
+	if err != nil {
+		return nil, fmt.Errorf("read compose file %s: %w", composeFile, err)
+	}
+
+	var doc composeDocument
+	if err := yaml.Unmarshal(content, &doc); err != nil {
+		return nil, fmt.Errorf("parse compose file %s: %w", composeFile, err)
+	}
+
+	baseDir := filepath.Dir(composeFile)
+	var issues []string
+	for serviceName, service := range doc.Services {
+		for _, volume := range service.Volumes {
+			mount, ok := volume.(string)
+			if !ok {
+				continue
+			}
+
+			source, target, ok := parseBindMount(mount)
+			if !ok {
+				continue
+			}
+
+			resolvedSource := source
+			if !filepath.IsAbs(resolvedSource) {
+				resolvedSource = filepath.Clean(filepath.Join(baseDir, resolvedSource))
+			}
+
+			issues = append(issues, validateBindMount(serviceName, resolvedSource, target)...)
+		}
+	}
+
+	return issues, nil
+}
+
+func parseBindMount(mount string) (source string, target string, ok bool) {
+	parts := strings.Split(mount, ":")
+	if len(parts) < 2 {
+		return "", "", false
+	}
+
+	source = strings.TrimSpace(parts[0])
+	target = strings.TrimSpace(parts[1])
+	if source == "" || target == "" {
+		return "", "", false
+	}
+
+	if !looksLikeBindSource(source) {
+		return "", "", false
+	}
+
+	return source, target, true
+}
+
+func looksLikeBindSource(source string) bool {
+	return strings.HasPrefix(source, ".") || strings.HasPrefix(source, "/") || strings.HasPrefix(source, "~")
+}
+
+func validateBindMount(serviceName, source, target string) []string {
+	if _, err := os.Stat(source); err != nil {
+		return []string{fmt.Sprintf("%s: missing %s for mount %s", serviceName, source, target)}
+	}
+
+	switch {
+	case strings.HasSuffix(target, "/msp"):
+		return validateMSPDir(serviceName, source)
+	case strings.HasSuffix(target, "/tls"):
+		return validateTLSDir(serviceName, source)
+	case strings.HasSuffix(target, ".block"):
+		return validateRegularFile(serviceName, source)
+	default:
+		return nil
+	}
+}
+
+func validateMSPDir(serviceName, source string) []string {
+	signcerts := filepath.Join(source, "signcerts")
+	entries, err := os.ReadDir(signcerts)
+	if err != nil || len(entries) == 0 {
+		return []string{fmt.Sprintf("%s: MSP directory %s is missing signcerts", serviceName, source)}
+	}
+	return nil
+}
+
+func validateTLSDir(serviceName, source string) []string {
+	required := []string{"ca.crt", "server.crt", "server.key"}
+	var issues []string
+	for _, name := range required {
+		if _, err := os.Stat(filepath.Join(source, name)); err != nil {
+			issues = append(issues, fmt.Sprintf("%s: TLS directory %s is missing %s", serviceName, source, name))
+		}
+	}
+	return issues
+}
+
+func validateRegularFile(serviceName, source string) []string {
+	info, err := os.Stat(source)
+	if err != nil {
+		return []string{fmt.Sprintf("%s: missing file %s", serviceName, source)}
+	}
+	if info.IsDir() {
+		return []string{fmt.Sprintf("%s: expected file but found directory %s", serviceName, source)}
+	}
+	return nil
 }
 
 // WriteComposeFile writes a docker-compose snippet to a file

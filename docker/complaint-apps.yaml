@@ -1,8 +1,15 @@
 # =============================================================================
 # Anti-Corruption Complaint System - Application Services
 # =============================================================================
-# Runs the Go gateway (connected as ACB) + Next.js operator console.
-# Both connect to the 4-org complaint network via the 'nanayam' Docker network.
+# Runs one Go gateway + Next.js org-console PER organization.
+# All four orgs (ACB, Dept, Oversight, Judiciary) get their own stack so
+# each can view ledger / activity through their own peer identity.
+#
+# Port map (host):
+#   ACB:        gRPC 50051, REST 8080, Console 3000
+#   Dept:       gRPC 50052, REST 8081, Console 3001
+#   Oversight:  gRPC 50053, REST 8082, Console 3002
+#   Judiciary:  gRPC 50054, REST 8083, Console 3003
 # =============================================================================
 
 version: "3.7"
@@ -14,16 +21,14 @@ networks:
 
 services:
   # ---------------------------------------------------------------------------
-  # Go gRPC / REST Gateway (connected as ACB)
+  # ACB
   # ---------------------------------------------------------------------------
-  gateway:
-    container_name: nanayam-gateway
+  gateway-acb:
+    container_name: nanayam-gateway-acb
     build:
       context: ../services/gateway
       dockerfile: Dockerfile
     environment:
-      - GATEWAY_GRPC_PORT=50051
-      - GATEWAY_HTTP_PORT=8080
       - FABRIC_CHANNEL=complaint-channel
       - FABRIC_CHAINCODE=complaint
       - MSP_ID=ACBMSP
@@ -41,21 +46,144 @@ services:
       - nanayam
     restart: unless-stopped
 
-  # ---------------------------------------------------------------------------
-  # Operator Console (Next.js)
-  # ---------------------------------------------------------------------------
-  console:
-    container_name: nanayam-console
+  console-acb:
+    container_name: nanayam-console-acb
     build:
-      context: ../apps/operator-console
+      context: ../apps/org-console
       dockerfile: Dockerfile
     environment:
-      - NEXT_PUBLIC_GATEWAY_URL=http://gateway:8080
-      - GATEWAY_URL=http://gateway:8080
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway-acb:8080
+      - GATEWAY_URL=http://gateway-acb:8080
     ports:
       - "3000:3000"
     networks:
       - nanayam
     depends_on:
-      - gateway
+      - gateway-acb
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Dept
+  # ---------------------------------------------------------------------------
+  gateway-dept:
+    container_name: nanayam-gateway-dept
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - FABRIC_CHANNEL=complaint-channel
+      - FABRIC_CHAINCODE=complaint
+      - MSP_ID=DeptMSP
+      - CRYPTO_PATH=/app/crypto
+      - PEER_ENDPOINT=peer0.dept.nanayam.com:9051
+      - TLS_CERT_PATH=/app/crypto/peers/peer0.dept.nanayam.com/tls/ca.crt
+      - IDENTITY_CERT=/app/crypto/users/Admin@dept.nanayam.com/msp/signcerts/Admin@dept.nanayam.com-cert.pem
+      - IDENTITY_KEY=/app/crypto/users/Admin@dept.nanayam.com/msp/keystore/priv_sk
+    ports:
+      - "50052:50051"
+      - "8081:8080"
+    volumes:
+      - ../crypto-config/peerOrganizations/dept.nanayam.com:/app/crypto:ro
+    networks:
+      - nanayam
+    restart: unless-stopped
+
+  console-dept:
+    container_name: nanayam-console-dept
+    build:
+      context: ../apps/org-console
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway-dept:8080
+      - GATEWAY_URL=http://gateway-dept:8080
+    ports:
+      - "3001:3000"
+    networks:
+      - nanayam
+    depends_on:
+      - gateway-dept
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Oversight
+  # ---------------------------------------------------------------------------
+  gateway-oversight:
+    container_name: nanayam-gateway-oversight
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - FABRIC_CHANNEL=complaint-channel
+      - FABRIC_CHAINCODE=complaint
+      - MSP_ID=OversightMSP
+      - CRYPTO_PATH=/app/crypto
+      - PEER_ENDPOINT=peer0.oversight.nanayam.com:10051
+      - TLS_CERT_PATH=/app/crypto/peers/peer0.oversight.nanayam.com/tls/ca.crt
+      - IDENTITY_CERT=/app/crypto/users/Admin@oversight.nanayam.com/msp/signcerts/Admin@oversight.nanayam.com-cert.pem
+      - IDENTITY_KEY=/app/crypto/users/Admin@oversight.nanayam.com/msp/keystore/priv_sk
+    ports:
+      - "50053:50051"
+      - "8082:8080"
+    volumes:
+      - ../crypto-config/peerOrganizations/oversight.nanayam.com:/app/crypto:ro
+    networks:
+      - nanayam
+    restart: unless-stopped
+
+  console-oversight:
+    container_name: nanayam-console-oversight
+    build:
+      context: ../apps/org-console
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway-oversight:8080
+      - GATEWAY_URL=http://gateway-oversight:8080
+    ports:
+      - "3002:3000"
+    networks:
+      - nanayam
+    depends_on:
+      - gateway-oversight
+    restart: unless-stopped
+
+  # ---------------------------------------------------------------------------
+  # Judiciary
+  # ---------------------------------------------------------------------------
+  gateway-judiciary:
+    container_name: nanayam-gateway-judiciary
+    build:
+      context: ../services/gateway
+      dockerfile: Dockerfile
+    environment:
+      - FABRIC_CHANNEL=complaint-channel
+      - FABRIC_CHAINCODE=complaint
+      - MSP_ID=JudiciaryMSP
+      - CRYPTO_PATH=/app/crypto
+      - PEER_ENDPOINT=peer0.judiciary.nanayam.com:11051
+      - TLS_CERT_PATH=/app/crypto/peers/peer0.judiciary.nanayam.com/tls/ca.crt
+      - IDENTITY_CERT=/app/crypto/users/Admin@judiciary.nanayam.com/msp/signcerts/Admin@judiciary.nanayam.com-cert.pem
+      - IDENTITY_KEY=/app/crypto/users/Admin@judiciary.nanayam.com/msp/keystore/priv_sk
+    ports:
+      - "50054:50051"
+      - "8083:8080"
+    volumes:
+      - ../crypto-config/peerOrganizations/judiciary.nanayam.com:/app/crypto:ro
+    networks:
+      - nanayam
+    restart: unless-stopped
+
+  console-judiciary:
+    container_name: nanayam-console-judiciary
+    build:
+      context: ../apps/org-console
+      dockerfile: Dockerfile
+    environment:
+      - NEXT_PUBLIC_GATEWAY_URL=http://gateway-judiciary:8080
+      - GATEWAY_URL=http://gateway-judiciary:8080
+    ports:
+      - "3003:3000"
+    networks:
+      - nanayam
+    depends_on:
+      - gateway-judiciary
     restart: unless-stopped

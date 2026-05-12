@@ -63,27 +63,37 @@ func (r *ComposeRunner) Stop(services ...string) error {
 }
 
 func (r *ComposeRunner) buildArgs(subcmd string, extra ...string) []string {
-	args := []string{subcmd}
+	args := make([]string, 0, len(r.Files)*2+1+len(extra))
 	for _, f := range r.Files {
 		args = append(args, "-f", f)
 	}
+	args = append(args, subcmd)
 	args = append(args, extra...)
 	return args
 }
 
 func runDockerCompose(args []string) error {
-	// Try "docker compose" first, fall back to "docker-compose"
-	cmd := exec.Command("docker", append([]string{"compose"}, args...)...)
+	composeBase, err := dockerComposeBaseCommand()
+	if err != nil {
+		return err
+	}
+
+	cmd := exec.Command(composeBase[0], append(composeBase[1:], args...)...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		// Fallback to docker-compose
-		cmd = exec.Command("docker-compose", args...)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
-		return cmd.Run()
+	return cmd.Run()
+}
+
+func dockerComposeBaseCommand() ([]string, error) {
+	if err := exec.Command("docker", "compose", "version").Run(); err == nil {
+		return []string{"docker", "compose"}, nil
 	}
-	return nil
+
+	if _, err := exec.LookPath("docker-compose"); err == nil {
+		return []string{"docker-compose"}, nil
+	}
+
+	return nil, fmt.Errorf("docker compose is not available; install Docker Compose v2 or docker-compose")
 }
 
 // FindComposeFiles returns the path to known compose files in the project
@@ -93,19 +103,25 @@ func FindComposeFiles(profile string) ([]string, error) {
 		return nil, err
 	}
 
+	return FindComposeFilesInDir(cwd, profile)
+}
+
+// FindComposeFilesInDir returns the path to known compose files in the given project directory.
+func FindComposeFilesInDir(baseDir, profile string) ([]string, error) {
+
 	var files []string
 	switch profile {
 	case "basic":
 		files = []string{
-			filepath.Join(cwd, "docker", "fabric-network.yaml"),
+			filepath.Join(baseDir, "docker", "fabric-network.yaml"),
 		}
 	case "complaint":
 		files = []string{
-			filepath.Join(cwd, "docker", "complaint-network.yaml"),
+			filepath.Join(baseDir, "docker", "complaint-network.yaml"),
 		}
 	default:
 		// Check if file exists directly
-		path := filepath.Join(cwd, "docker", profile+".yaml")
+		path := filepath.Join(baseDir, "docker", profile+".yaml")
 		if _, err := os.Stat(path); err == nil {
 			files = []string{path}
 		} else {
@@ -120,6 +136,47 @@ func FindComposeFiles(profile string) ([]string, error) {
 		}
 	}
 	return files, nil
+}
+
+// ResolveComposeFile resolves a compose config path from an absolute path, a relative path,
+// or a filename inside the project's docker/ directory.
+func ResolveComposeFile(baseDir, config string) (string, error) {
+	seen := make(map[string]struct{})
+	for _, candidate := range composeConfigCandidates(baseDir, config) {
+		if candidate == "" {
+			continue
+		}
+		if _, ok := seen[candidate]; ok {
+			continue
+		}
+		seen[candidate] = struct{}{}
+
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate, nil
+		}
+	}
+
+	return "", fmt.Errorf("compose config not found: %s", config)
+}
+
+func composeConfigCandidates(baseDir, config string) []string {
+	if filepath.IsAbs(config) {
+		return []string{config}
+	}
+
+	candidates := []string{
+		filepath.Join(baseDir, config),
+		filepath.Join(baseDir, "docker", config),
+	}
+
+	if filepath.Ext(config) == "" {
+		candidates = append(candidates,
+			filepath.Join(baseDir, config+".yaml"),
+			filepath.Join(baseDir, "docker", config+".yaml"),
+		)
+	}
+
+	return candidates
 }
 
 // WriteComposeFile writes a docker-compose snippet to a file

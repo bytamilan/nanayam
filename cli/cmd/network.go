@@ -20,6 +20,7 @@ func init() {
 	networkCmd.AddCommand(networkStatusCmd)
 
 	networkUpCmd.Flags().String("profile", "basic", "Network profile: basic, complaint")
+	networkUpCmd.Flags().String("config", "", "Compose config file to use (path or filename under docker/)")
 	networkDownCmd.Flags().Bool("volumes", false, "Also remove named volumes")
 	networkCleanCmd.Flags().Bool("all", false, "Also remove Docker images")
 }
@@ -34,31 +35,24 @@ var networkUpCmd = &cobra.Command{
 	Use:   "up",
 	Short: "Start the full Fabric network",
 	Example: `  nanayam network up
-  nanayam network up --profile complaint`,
+	  nanayam network up --profile complaint
+	  nanayam network up --config fabric-network.yaml`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		profile, _ := cmd.Flags().GetString("profile")
+		config, _ := cmd.Flags().GetString("config")
 		blue := color.New(color.FgBlue).SprintFunc()
 		green := color.New(color.FgGreen).SprintFunc()
 
-		fmt.Printf("%s Starting Fabric network (profile: %s)...\n", blue("→"), profile)
+		if config != "" && cmd.Flags().Changed("profile") {
+			return fmt.Errorf("--profile and --config cannot be used together")
+		}
 
-		composeFiles, err := docker.FindComposeFiles(profile)
+		composeFiles, targetLabel, err := resolveNetworkUpComposeFiles(profile, config)
 		if err != nil {
 			return err
 		}
 
-		// Also start apps if docker/apps.yaml or docker/complaint-apps.yaml exists
-		cwd, _ := os.Getwd()
-		var appsFile string
-		switch profile {
-		case "basic":
-			appsFile = filepath.Join(cwd, "docker", "apps.yaml")
-		case "complaint":
-			appsFile = filepath.Join(cwd, "docker", "complaint-apps.yaml")
-		}
-		if _, err := os.Stat(appsFile); err == nil {
-			composeFiles = append(composeFiles, appsFile)
-		}
+		fmt.Printf("%s Starting Fabric network (%s)...\n", blue("→"), targetLabel)
 
 		// Ensure nanayam network exists
 		exec.Command("docker", "network", "create", "nanayam").Run() // ignore error if exists
@@ -76,6 +70,72 @@ var networkUpCmd = &cobra.Command{
 		fmt.Println("  nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic")
 		return nil
 	},
+}
+
+func resolveNetworkUpComposeFiles(profile, config string) ([]string, string, error) {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil, "", err
+	}
+
+	return resolveNetworkUpComposeFilesFromDir(cwd, profile, config)
+}
+
+func resolveNetworkUpComposeFilesFromDir(cwd, profile, config string) ([]string, string, error) {
+	if config != "" {
+		composeFile, err := docker.ResolveComposeFile(cwd, config)
+		if err != nil {
+			return nil, "", err
+		}
+
+		composeFiles := []string{composeFile}
+		if appsFile := resolveNetworkAppsFile(composeFile); appsFile != "" {
+			composeFiles = append(composeFiles, appsFile)
+		}
+
+		return composeFiles, fmt.Sprintf("config: %s", filepath.Base(composeFile)), nil
+	}
+
+	composeFiles, err := docker.FindComposeFilesInDir(cwd, profile)
+	if err != nil {
+		return nil, "", err
+	}
+
+	if len(composeFiles) > 0 {
+		if appsFile := resolveNetworkAppsFile(composeFiles[0]); appsFile != "" {
+			composeFiles = append(composeFiles, appsFile)
+		}
+	}
+
+	return composeFiles, fmt.Sprintf("profile: %s", profile), nil
+}
+
+func resolveNetworkAppsFile(composeFile string) string {
+	dir := filepath.Dir(composeFile)
+	base := filepath.Base(composeFile)
+	var candidates []string
+
+	switch base {
+	case "fabric-network.yaml":
+		candidates = append(candidates, filepath.Join(dir, "apps.yaml"))
+	case "complaint-network.yaml":
+		candidates = append(candidates, filepath.Join(dir, "complaint-apps.yaml"))
+	default:
+		if strings.HasSuffix(base, "-network.yaml") {
+			prefix := strings.TrimSuffix(base, "-network.yaml")
+			if prefix != "" {
+				candidates = append(candidates, filepath.Join(dir, prefix+"-apps.yaml"))
+			}
+		}
+	}
+
+	for _, candidate := range candidates {
+		if _, err := os.Stat(candidate); err == nil {
+			return candidate
+		}
+	}
+
+	return ""
 }
 
 var networkDownCmd = &cobra.Command{

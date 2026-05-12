@@ -33,6 +33,14 @@ log_ok()    { printf '%b\n' "${GREEN}[OK]${NC} $1"; }
 log_warn()  { printf '%b\n' "${YELLOW}[WARN]${NC} $1"; }
 log_err()   { printf '%b\n' "${RED}[ERR]${NC} $1"; }
 
+get_shell_config() {
+    case "${SHELL}" in
+        */zsh) printf '%s\n' "${HOME}/.zshrc" ;;
+        */bash) printf '%s\n' "${HOME}/.bashrc" ;;
+        *) printf '%s\n' "${HOME}/.profile" ;;
+    esac
+}
+
 # Parse arguments
 WITH_FABRIC=false
 SETUP=false
@@ -269,11 +277,7 @@ build_local_binary() {
 
 add_to_path() {
     local shell_cfg=""
-    case "${SHELL}" in
-        */zsh) shell_cfg="${HOME}/.zshrc" ;;
-        */bash) shell_cfg="${HOME}/.bashrc" ;;
-        *) shell_cfg="${HOME}/.profile" ;;
-    esac
+    shell_cfg="$(get_shell_config)"
 
     touch "${shell_cfg}"
     if ! grep -q "\.nanayam/bin" "${shell_cfg}"; then
@@ -285,6 +289,8 @@ add_to_path() {
     else
         log_info "~/.nanayam/bin already in PATH"
     fi
+
+    log_info "If 'nanayam' is not found in this terminal yet, run: source ${shell_cfg} && rehash"
 }
 
 download_fabric_binaries() {

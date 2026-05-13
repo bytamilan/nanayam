@@ -179,7 +179,6 @@ func ensureComposePrerequisites(cwd string, composeFiles []string) (bool, string
 	return true, artifactLabel, nil
 }
 
-
 func autoGenerateNetworkArtifacts(cwd string, composeFiles []string) (string, error) {
 	cryptoConfigFile, err := resolveCryptoConfigForCompose(cwd, composeFiles)
 	if err != nil {

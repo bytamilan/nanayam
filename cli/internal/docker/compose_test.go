@@ -1,10 +1,10 @@
 package docker
 
 import (
-	"strings"
 	"os"
 	"path/filepath"
 	"reflect"
+	"strings"
 	"testing"
 )
 

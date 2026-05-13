@@ -83,9 +83,9 @@ func TestResolveNetworkAppsFileForGenericNetwork(t *testing.T) {
 
 func TestComposeVariantCandidates(t *testing.T) {
 	tests := []struct {
-		name  string
-		file  string
-		want  []string
+		name string
+		file string
+		want []string
 	}{
 		{name: "basic network", file: "/tmp/docker/fabric-network.yaml", want: []string{"fabric", "basic"}},
 		{name: "complaint network", file: "/tmp/docker/complaint-network.yaml", want: []string{"complaint"}},
@@ -113,9 +113,9 @@ func TestResolveCryptoConfigForCompose(t *testing.T) {
 	writeTestFile(t, filepath.Join(configDir, "crypto-config-custom.yaml"))
 
 	tests := []struct {
-		name        string
+		name         string
 		composeFiles []string
-		wantBase    string
+		wantBase     string
 	}{
 		{name: "basic", composeFiles: []string{filepath.Join(tempDir, "docker", "fabric-network.yaml")}, wantBase: "crypto-config.yaml"},
 		{name: "complaint", composeFiles: []string{filepath.Join(tempDir, "docker", "complaint-network.yaml")}, wantBase: "crypto-config-complaint.yaml"},

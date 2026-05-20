@@ -1,7 +1,5 @@
 # =============================================================================
-# Nanayam - Configtx Configuration
-# =============================================================================
-# Basic 2-organization Fabric network configuration.
+# Nanayam - Basic Two-Org Configtx Configuration
 # =============================================================================
 
 Organizations:
@@ -95,12 +93,6 @@ Orderer: &OrdererDefaults
   OrdererType: etcdraft
   Addresses:
     - orderer.nanayam.com:7050
-  EtcdRaft:
-    Consenters:
-      - Host: orderer.nanayam.com
-        Port: 7050
-        ClientTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
-        ServerTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
   BatchTimeout: 2s
   BatchSize:
     MaxMessageCount: 10
@@ -120,6 +112,12 @@ Orderer: &OrdererDefaults
     BlockValidation:
       Type: ImplicitMeta
       Rule: "ANY Writers"
+  EtcdRaft:
+    Consenters:
+      - Host: orderer.nanayam.com
+        Port: 7050
+        ClientTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
+        ServerTLSCert: ../crypto-config/ordererOrganizations/nanayam.com/orderers/orderer.nanayam.com/tls/server.crt
   Capabilities:
     <<: *OrdererCapabilities
 
@@ -145,14 +143,14 @@ Profiles:
       Organizations:
         - *OrdererOrg
     Consortiums:
-      SampleConsortium:
+      TwoOrgsConsortium:
         Organizations:
           - *Org1
           - *Org2
 
   TwoOrgsChannel:
-    Consortium: SampleConsortium
     <<: *ChannelDefaults
+    Consortium: TwoOrgsConsortium
     Application:
       <<: *ApplicationDefaults
       Organizations:

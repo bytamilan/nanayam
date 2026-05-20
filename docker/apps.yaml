@@ -51,7 +51,7 @@ services:
   console:
     container_name: nanayam-console
     build:
-      context: ../apps/operator-console
+      context: ../apps/org-console
       dockerfile: Dockerfile
     environment:
       - NEXT_PUBLIC_GATEWAY_URL=http://gateway:8080

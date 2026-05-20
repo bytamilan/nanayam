@@ -7,31 +7,31 @@
 ## Architecture
 
 ```
-┌─────────────┐   REST   ┌─────────────┐   gRPC-TLS   ┌─────────────┐
-│   Console   │◀────────▶│   Gateway   │◀────────────▶│  ACB Peer   │
-│  (Next.js)  │          │    (Go)     │              │  (Org1)     │
-└─────────────┘          └─────────────┘              └──────┬──────┘
-                                                             │
-                         ┌─────────────┐   Gossip           │
-                         │  Dept Peer  │◀───────────────────┤
-                         │  (Org2)     │                    │
-                         └──────┬──────┘                    │
-                                │                          │
-                         ┌──────┴──────┐                   │
-                         │ Oversight   │◀──────────────────┤
-                         │ Peer (Org3) │                   │
-                         └──────┬──────┘                   │
-                                │                          │
-                         ┌──────┴──────┐                   │
-                         │ Judiciary   │◀──────────────────┘
-                         │ Peer (Org4) │
-                         └─────────────┘
-                              │
-                              ▼
-                       ┌─────────────┐
-                       │   Orderer   │
-                       │   (Raft)    │
-                       └─────────────┘
+        ┌─────────────┐   REST   ┌─────────────┐   gRPC-TLS   ┌─────────────┐
+        │ Console-ACB │◀────────▶│ Gateway-ACB │◀────────────▶│  ACB Peer   │
+        │  (Next.js)  │          │    (Go)     │              │  (Org1)     │
+        └─────────────┘          └─────────────┘              └──────┬──────┘
+                                                                     │
+        ┌─────────────┐   REST   ┌─────────────┐                   │
+        │Console-Dept │◀────────▶│Gateway-Dept │◀──────────────────┤
+        │  (Next.js)  │          │    (Go)     │                   │
+        └─────────────┘          └─────────────┘                   │
+                                                                     │
+        ┌─────────────┐   REST   ┌─────────────┐                   │
+        │Console-Ovst │◀────────▶│Gateway-Ovst │◀──────────────────┤
+        │  (Next.js)  │          │    (Go)     │                   │
+        └─────────────┘          └─────────────┘                   │
+                                                                     │
+        ┌─────────────┐   REST   ┌─────────────┐                   │
+        │Console-Jud  │◀────────▶│Gateway-Jud  │◀──────────────────┘
+        │  (Next.js)  │          │    (Go)     │
+        └─────────────┘          └─────────────┘
+                                           │
+                                           ▼
+                                    ┌─────────────┐
+                                    │   Orderer   │
+                                    │   (Raft)    │
+                                    └─────────────┘
 ```
 
 ---
@@ -106,6 +106,28 @@ Closed
 
 ## Quick Start
 
+### CLI workflow
+
+```bash
+# 1. Install prerequisites and Fabric binaries
+nanayam prerequisites --auto
+
+# 2. Start the complaint network
+nanayam network up --profile complaint
+```
+
+For the built-in complaint network, `nanayam network up --profile complaint` automatically runs `./scripts/setup-complaint.sh` if certificates or channel artifacts are missing.
+
+To start only the complaint infrastructure compose directly, you can also use:
+
+```bash
+nanayam network up --config docker/complaint-network.yaml
+```
+
+When `--config` is used, Nanayam starts only the compose file you specify. Start `docker/complaint-apps.yaml` separately if you also want the gateway and console.
+
+### Script workflow
+
 ```bash
 # 1. Setup: binaries, images, crypto, channel artifacts
 ./scripts/setup-complaint.sh
@@ -120,7 +142,14 @@ Closed
 ./scripts/start-complaint-apps.sh
 ```
 
-Open **http://localhost:3000**
+Open any organization console:
+
+| Organization | Console URL | Gateway REST |
+|--------------|-------------|--------------|
+| ACB | http://localhost:3000 | http://localhost:8080 |
+| Dept | http://localhost:3001 | http://localhost:8081 |
+| Oversight | http://localhost:3002 | http://localhost:8082 |
+| Judiciary | http://localhost:3003 | http://localhost:8083 |
 
 ---
 
@@ -160,6 +189,9 @@ curl -X POST http://localhost:8080/v1/UpdateComplaint \
 ## Stopping
 
 ```bash
+# Stop the complaint network using the CLI
+nanayam network down
+
 # Stop apps only
 docker-compose -f docker/complaint-apps.yaml down
 
@@ -183,6 +215,6 @@ rm -rf crypto-config channel-artifacts
 | 1 orderer | 5+ Raft orderers for BFT |
 | Self-signed TLS | NIC-approved PKI |
 | `cryptogen` static certs | Fabric CA with HSM |
-| Single gateway (ACB identity) | Separate gateway per org with proper IAM |
+| Separate gateway + console per org | Kubernetes ingress + org IAM |
 | LevelDB | CouchDB for rich queries (already configured) |
 | No backup | Automated snapshots + DR |

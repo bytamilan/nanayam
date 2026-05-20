@@ -2,8 +2,8 @@
 # =============================================================================
 # Anti-Corruption Complaint System - Start Applications
 # =============================================================================
-# Builds and starts the Go gateway + Next.js operator console for the
-# complaint system.
+# Builds and starts one Go gateway + Next.js org-console PER organization.
+# All four orgs (ACB, Dept, Oversight, Judiciary) get their own stack.
 #
 # Usage:
 #   ./scripts/start-complaint-apps.sh
@@ -26,7 +26,7 @@ log_err()   { echo -e "${RED}[ERR]${NC} $1"; }
 
 main() {
     echo -e "${BLUE}===============================================${NC}"
-    echo -e "${BLUE}  Start Complaint System Apps${NC}"
+    echo -e "${BLUE}  Start Complaint System Apps (4-Org)${NC}"
     echo -e "${BLUE}===============================================${NC}"
     echo ""
 
@@ -40,15 +40,22 @@ main() {
         exit 1
     fi
 
-    log_info "Building and starting complaint system services..."
+    log_info "Building and starting complaint system services (4 gateways + 4 consoles)..."
     docker-compose -f "${COMPOSE_FILE}" up -d --build
 
     log_ok "Complaint system apps are running"
     echo ""
-    echo "Services:"
-    echo "  Go Gateway (gRPC):   grpc://localhost:50051"
-    echo "  Go Gateway (REST):   http://localhost:8080"
-    echo "  Operator Console:    http://localhost:3000"
+    echo "Organization Consoles:"
+    echo "  ACB Console:        http://localhost:3000  (Gateway REST: http://localhost:8080)"
+    echo "  Dept Console:       http://localhost:3001  (Gateway REST: http://localhost:8081)"
+    echo "  Oversight Console:  http://localhost:3002  (Gateway REST: http://localhost:8082)"
+    echo "  Judiciary Console:  http://localhost:3003  (Gateway REST: http://localhost:8083)"
+    echo ""
+    echo "gRPC Gateways:"
+    echo "  ACB:        grpc://localhost:50051"
+    echo "  Dept:       grpc://localhost:50052"
+    echo "  Oversight:  grpc://localhost:50053"
+    echo "  Judiciary:  grpc://localhost:50054"
     echo ""
     echo "Test the REST API:"
     echo "  curl http://localhost:8080/v1/health"

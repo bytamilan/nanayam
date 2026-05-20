@@ -28,6 +28,23 @@ log_ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_err()   { echo -e "${RED}[ERR]${NC} $1"; }
 
+CONFIGTX_TMP_DIR=""
+
+cleanup_configtx_env() {
+    if [ -n "${CONFIGTX_TMP_DIR}" ] && [ -d "${CONFIGTX_TMP_DIR}" ]; then
+        rm -rf "${CONFIGTX_TMP_DIR}"
+    fi
+}
+
+prepare_configtx_env() {
+    local source_file="$1"
+    CONFIGTX_TMP_DIR=$(mktemp -d)
+    cp "${source_file}" "${CONFIGTX_TMP_DIR}/configtx.yaml"
+    export FABRIC_CFG_PATH="${CONFIGTX_TMP_DIR}"
+}
+
+trap cleanup_configtx_env EXIT
+
 check_prereqs() {
     log_info "Checking prerequisites..."
     command -v docker &>/dev/null || { log_err "Docker is required."; exit 1; }
@@ -94,10 +111,7 @@ generate_crypto() {
 
 generate_channel_artifacts() {
     log_info "Creating channel artifacts for complaint-channel..."
-    export FABRIC_CFG_PATH="${PWD}/config"
-
-    # configtxgen expects the file to be named configtx.yaml
-    cp "${PWD}/config/configtx-complaint.yaml" "${PWD}/config/configtx.yaml"
+    prepare_configtx_env "${PWD}/config/configtx-complaint.yaml"
 
     rm -rf "${CHANNEL_DIR}"
     mkdir -p "${CHANNEL_DIR}"

@@ -150,11 +150,14 @@ jobs:
         with:
           ruby-version: '3.3'
 
+      # Pinned to the Jekyll version GitHub Pages runs, so this build
+      # reproduces what actually gets deployed rather than whatever is newest.
       - name: Build the documentation site
+        working-directory: docs
         run: |
           set -euo pipefail
-          gem install jekyll --no-document
-          cd docs && jekyll build
+          gem install jekyll -v 3.9.5 --no-document
+          jekyll build
 
       # GitHub Pages deploys from main without reporting a broken link or a
       # missing index, so the built site is checked here instead.

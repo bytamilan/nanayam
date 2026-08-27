@@ -1,0 +1,34 @@
+name: nanayam_flutter
+
+packages:
+  - packages/**
+  - apps/**
+
+command:
+  version:
+    linkToCommits: true
+  bootstrap:
+    usePubspecOverrides: true
+
+scripts:
+  analyze:
+    run: melos exec -- "dart analyze ."
+    description: Run static analysis in every package.
+
+  format:
+    run: melos exec -- "dart format --set-exit-if-changed ."
+    description: Check formatting in every package.
+
+  test:
+    run: |
+      melos exec --dir-exists=test --scope="nanayam_ledger_models" --scope="nanayam_ledger_client" --scope="nanayam_voucher_core" -- "dart test"
+      melos exec --dir-exists=test --scope="nanayam_ui_kit" --scope="voucher_wallet" -- "flutter test"
+    description: >
+      Run tests in every package that has a test/ directory — "dart test" for
+      the pure-Dart packages, "flutter test" for the ones that depend on
+      Flutter (flutter test errors out on a package with no Flutter
+      dependency, and dart test can't run Flutter's widget-test harness).
+
+  get:
+    run: melos exec -- "flutter pub get"
+    description: Fetch dependencies for every package.

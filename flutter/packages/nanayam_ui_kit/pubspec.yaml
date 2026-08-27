@@ -1,0 +1,20 @@
+name: nanayam_ui_kit
+description: >
+  Shared Flutter theme and widgets for Nanayam sample apps: a Material 3
+  theme, a currency formatter, status badges, and loading/empty/error state
+  widgets. Not voucher-specific — reusable by any Nanayam Flutter app.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0

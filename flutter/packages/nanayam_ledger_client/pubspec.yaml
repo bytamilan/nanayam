@@ -1,0 +1,20 @@
+name: nanayam_ledger_client
+description: >
+  Reusable Dart HTTP client for the Nanayam distribution gateway REST API
+  (auth, generic asset ledger, ledger explorer). Pure Dart — works from
+  Flutter apps, CLIs, or servers alike.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  http: ^1.2.0
+  meta: ^1.15.0
+  nanayam_ledger_models:
+    path: ../nanayam_ledger_models
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.25.0

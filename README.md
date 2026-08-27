@@ -204,6 +204,9 @@ nanayam upgrade --dev-local --refresh --source /path/to/nanayam
 nanayam/
 ├── apps/
 │   └── org-console/           # Next.js web UI
+├── flutter/                   # Melos-managed Flutter/Dart workspace
+│   ├── packages/               # Reusable gateway client, models, UI kit, voucher domain
+│   └── apps/voucher_wallet/    # Example app: voucher provisioning & usage
 ├── cli/                       # Nanayam CLI (Go + Cobra)
 │   ├── cmd/                   # Command implementations
 │   ├── internal/              # Internal packages
@@ -251,6 +254,33 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 
 ---
 
+## Flutter Voucher Example
+
+[`flutter/`](flutter) is a [Melos](https://melos.invertase.dev/)-managed
+Flutter/Dart monorepo demonstrating how to build a mobile client against the
+gateway's REST API. It ships reusable packages first —
+[`nanayam_ledger_models`](flutter/packages/nanayam_ledger_models),
+[`nanayam_ledger_client`](flutter/packages/nanayam_ledger_client), and
+[`nanayam_ui_kit`](flutter/packages/nanayam_ui_kit) have nothing to do with
+vouchers and are meant for any future Nanayam Flutter app — plus one
+voucher-specific domain package,
+[`nanayam_voucher_core`](flutter/packages/nanayam_voucher_core), and an
+example app, [`voucher_wallet`](flutter/apps/voucher_wallet), that provisions
+CDC-voucher-style vouchers to citizens and lets businesses redeem them, with
+every transaction recorded on the Nanayam sample ledger.
+
+```bash
+cd flutter
+dart pub global activate melos
+melos bootstrap
+melos run test
+```
+
+See [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md) for
+the full design write-up.
+
+---
+
 ## Documentation
 
 Full documentation lives in the **[Nanayam Wiki](https://github.com/bytamilan/nanayam/wiki)**, available in **English** and **தமிழ்**. The source is in [`docs/wiki/`](docs/wiki) and publishes automatically on every push to `main`.
@@ -274,6 +304,7 @@ Reference material also lives alongside the code:
 | [`docs/hyperledger-fabric-guide.md`](docs/hyperledger-fabric-guide.md) | Hyperledger Fabric concepts & internals |
 | [`docs/nanayam-architecture.md`](docs/nanayam-architecture.md) | How Nanayam components interact |
 | [`docs/complaint-system.md`](docs/complaint-system.md) | The grievance workflow in detail |
+| [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md) | Flutter voucher provisioning & usage example: packages, app, and ledger design |
 
 ---
 

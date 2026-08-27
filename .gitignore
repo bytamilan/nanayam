@@ -42,3 +42,19 @@ pnpm-debug.log*
 # Jekyll build output for the docs site
 _site/
 .jekyll-cache/
+
+# Flutter / Dart (flutter/)
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/build/
+flutter/**/pubspec.lock
+flutter/**/pubspec_overrides.yaml
+**/*.g.dart
+**/*.freezed.dart
+**/ios/Pods/
+**/ios/.symlinks/
+**/android/.gradle/

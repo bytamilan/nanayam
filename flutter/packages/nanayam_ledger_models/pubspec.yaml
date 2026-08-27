@@ -1,0 +1,17 @@
+name: nanayam_ledger_models
+description: >
+  Shared data models (DTOs) for the Nanayam distribution gateway REST API —
+  auth, generic ledger assets, and ledger explorer responses. Depend on this
+  package from any Dart or Flutter app that talks to a Nanayam gateway.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  meta: ^1.15.0
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.25.0

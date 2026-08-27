@@ -1,0 +1,7 @@
+include: package:lints/recommended.yaml
+# This file only applies when analyzing the `flutter/` workspace root
+# itself (e.g. via a workspace-wide IDE run). Each package and app under
+# `packages/` and `apps/` ships its own `analysis_options.yaml` — that one
+# wins for `melos run analyze` / per-package `dart analyze`, and picks the
+# right base (`lints` for pure-Dart packages, `flutter_lints` for Flutter
+# packages/apps) so it can resolve against that package's own dependencies.

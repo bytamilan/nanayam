@@ -1,0 +1,12 @@
+# -----------------------------------------------------------------------------
+# Nanayam namespace
+# -----------------------------------------------------------------------------
+# Every Nanayam workload lives in one namespace so a teardown is a single
+# delete and RBAC can be scoped to it.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ${NANAYAM_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: nanayam
+    app.kubernetes.io/part-of: nanayam

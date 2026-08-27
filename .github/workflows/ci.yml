@@ -1,0 +1,176 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cli:
+    name: CLI (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: cli/go.mod
+          cache-dependency-path: cli/go.sum
+
+      - name: Check formatting
+        working-directory: cli
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        working-directory: cli
+        run: go vet ./...
+
+      - name: Build
+        working-directory: cli
+        run: go build ./...
+
+      - name: Test
+        working-directory: cli
+        run: go test -race ./...
+
+  gateway:
+    name: Gateway (Go)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/gateway/go.mod
+          cache-dependency-path: services/gateway/go.sum
+
+      - name: Check formatting
+        working-directory: services/gateway
+        run: |
+          unformatted="$(gofmt -l .)"
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        working-directory: services/gateway
+        run: go vet ./...
+
+      - name: Build
+        working-directory: services/gateway
+        run: go build ./...
+
+      - name: Test
+        working-directory: services/gateway
+        run: go test -race ./...
+
+  console:
+    name: Console (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/org-console
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: apps/org-console/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Test
+        run: pnpm test
+
+  scripts:
+    name: Shell scripts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax check
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r script; do
+            if ! bash -n "$script"; then
+              echo "Syntax error in $script"
+              failed=1
+            fi
+          done < <(find . -name '*.sh' -not -path './node_modules/*' -not -path '*/node_modules/*')
+          exit "$failed"
+
+      - name: ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          severity: warning
+          ignore_paths: node_modules
+
+  manifests:
+    name: Kubernetes manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Rendering with --dry-run needs no cluster, so this catches a broken
+      # manifest or a placeholder that lost its substitution before a deploy does.
+      - name: Render manifests
+        run: |
+          set -euo pipefail
+          ./scripts/deploy-cloud.sh \
+            --registry ghcr.io/example \
+            --domain nanayam.example.com \
+            --tag ci \
+            --dry-run > rendered.yaml
+
+      - name: Validate rendered YAML
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import re
+          import sys
+          import yaml
+
+          with open("rendered.yaml") as handle:
+              raw = handle.read()
+
+          leftover = set(re.findall(r"\$\{[A-Z_]+\}", raw))
+          if leftover:
+              sys.exit(f"unsubstituted placeholders in rendered manifests: {sorted(leftover)}")
+
+          docs = [doc for doc in yaml.safe_load_all(raw) if doc]
+          if not docs:
+              sys.exit("no manifests were rendered")
+
+          for doc in docs:
+              if "kind" not in doc or "metadata" not in doc:
+                  sys.exit(f"malformed manifest: {doc}")
+
+          print(f"{len(docs)} manifests rendered and parsed")
+          PY

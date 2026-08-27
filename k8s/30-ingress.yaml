@@ -1,0 +1,44 @@
+# -----------------------------------------------------------------------------
+# Ingress
+# -----------------------------------------------------------------------------
+# Applied only when a domain is supplied (deploy-cloud.sh --domain). Without one
+# the deployment stays cluster-internal and is reached with kubectl port-forward.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: nanayam
+  namespace: ${NANAYAM_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: nanayam
+    app.kubernetes.io/part-of: nanayam
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "16m"
+spec:
+  ingressClassName: ${NANAYAM_INGRESS_CLASS}
+  rules:
+    - host: ${NANAYAM_DOMAIN}
+      http:
+        paths:
+          # The gateway's REST surface is namespaced under /v1, so it can share
+          # a hostname with the console without a path rewrite.
+          - path: /v1
+            pathType: Prefix
+            backend:
+              service:
+                name: nanayam-gateway
+                port:
+                  number: 8080
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: nanayam-gateway
+                port:
+                  number: 8080
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nanayam-console
+                port:
+                  number: 3000

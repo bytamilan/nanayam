@@ -1,0 +1,109 @@
+# -----------------------------------------------------------------------------
+# Distribution gateway (Go, gRPC + REST)
+# -----------------------------------------------------------------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: nanayam-gateway
+  namespace: ${NANAYAM_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: nanayam-gateway
+    app.kubernetes.io/part-of: nanayam
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: nanayam-gateway
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+    - name: grpc
+      port: 50051
+      targetPort: grpc
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nanayam-gateway
+  namespace: ${NANAYAM_NAMESPACE}
+  labels:
+    app.kubernetes.io/name: nanayam-gateway
+    app.kubernetes.io/part-of: nanayam
+spec:
+  replicas: ${NANAYAM_GATEWAY_REPLICAS}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: nanayam-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: nanayam-gateway
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        fsGroup: 65532
+      containers:
+        - name: gateway
+          image: ${NANAYAM_GATEWAY_IMAGE}
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+            - name: grpc
+              containerPort: 50051
+          env:
+            - name: FABRIC_CHANNEL
+              value: "${NANAYAM_CHANNEL}"
+            - name: FABRIC_CHAINCODE
+              value: "${NANAYAM_CHAINCODE}"
+            - name: MSP_ID
+              value: "${NANAYAM_MSP_ID}"
+            - name: PEER_ENDPOINT
+              value: "${NANAYAM_PEER_ENDPOINT}"
+            - name: CRYPTO_PATH
+              value: /app/crypto
+            - name: TLS_CERT_PATH
+              value: /app/crypto/peers/${NANAYAM_PEER_HOST}/tls/ca.crt
+            - name: AUTH_SIGNUP_ENABLED
+              value: "${NANAYAM_SIGNUP_ENABLED}"
+            # The JWT secret is supplied by the nanayam-auth secret, which the
+            # deploy script creates from a generated random value. It is never
+            # baked into the image or this manifest.
+            - name: AUTH_JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: nanayam-auth
+                  key: jwt-secret
+          volumeMounts:
+            - name: fabric-crypto
+              mountPath: /app/crypto
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+      volumes:
+        - name: fabric-crypto
+          secret:
+            secretName: nanayam-fabric-crypto

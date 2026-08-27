@@ -52,11 +52,37 @@ Each package can also be developed independently — `cd` into it and run
 plain `flutter pub get` / `dart pub get` — melos is a convenience for
 working across all of them at once, not a requirement.
 
+## Testing
+
+Every package ships its own test suite, and none of them need a running
+Fabric network or gateway:
+
+- `nanayam_ledger_models` / `nanayam_ledger_client` test against
+  hand-rolled fake gateways (`test/support/fake_gateway.dart` in the client
+  package) — a `package:http` `MockClient` standing in for
+  `services/gateway`, so the HTTP contract is exercised without a live
+  server.
+- `nanayam_voucher_core` does the same one layer up, against a
+  `FakeLedger` that only understands the generic asset endpoints —
+  covering provisioning, redemption, balance/status derivation, and every
+  documented failure mode (duplicate code, expired voucher, over-redemption,
+  a rejected ledger write).
+- `nanayam_ui_kit` has plain widget tests for its theme and shared states.
+- `voucher_wallet` injects a fake gateway through `SessionController`'s
+  `LedgerClientFactory` seam, so both the controller and the actual login
+  screen get driven through real login/failure/logout flows in tests
+  without touching the network.
+
+New code in any package should follow the same shape: write the test
+against the nearest fake first, then the implementation. `melos run test`
+runs everything at once (see [Getting started](#getting-started) above).
+
 ## The voucher example
 
 See [`apps/voucher_wallet/README.md`](apps/voucher_wallet/README.md) for
 how to run the example app, and the main repo's
-[`docs/flutter-voucher-example.md`](../docs/flutter-voucher-example.md) for
-the full design write-up: why a generic asset ledger stands in for a
-dedicated chaincode, the exact field encoding used, and its known
-limitations as a demo.
+[`docs/flutter-voucher-example.md`](../docs/flutter-voucher-example.md#quickstart)
+for a step-by-step guide covering the Fabric network, the gateway, and the
+app together, plus the full design write-up: why a generic asset ledger
+stands in for a dedicated chaincode, the exact field encoding used, and its
+known limitations as a demo.

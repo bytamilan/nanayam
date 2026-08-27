@@ -231,4 +231,100 @@ void main() {
       expect(xRedemptions.every((r) => r.merchantId == 'merchant-x'), isTrue);
     });
   });
+
+  group('redeemVoucher input validation', () {
+    test('rejects a zero amount', () async {
+      await repo.provisionVoucher(
+        code: 'CDC-030',
+        holderId: 'citizen-1',
+        category: 'groceries',
+        program: 'CDC Vouchers 2026',
+        faceValueCents: 10000,
+        expiresAt: future(),
+      );
+
+      expect(
+        () => repo.redeemVoucher(
+          code: 'CDC-030',
+          merchantId: 'merchant-1',
+          amountCents: 0,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('rejects a negative amount', () async {
+      await repo.provisionVoucher(
+        code: 'CDC-031',
+        holderId: 'citizen-1',
+        category: 'groceries',
+        program: 'CDC Vouchers 2026',
+        faceValueCents: 10000,
+        expiresAt: future(),
+      );
+
+      expect(
+        () => repo.redeemVoucher(
+          code: 'CDC-031',
+          merchantId: 'merchant-1',
+          amountCents: -100,
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+  });
+
+  group('ledger rejection', () {
+    test(
+      'provisionVoucher surfaces a non-duplicate ledger error as '
+      'VoucherLedgerRejectedException',
+      () {
+        ledger.forceNextCreateAssetError = 'chaincode validation failed';
+
+        expect(
+          () => repo.provisionVoucher(
+            code: 'CDC-040',
+            holderId: 'citizen-1',
+            category: 'groceries',
+            program: 'CDC Vouchers 2026',
+            faceValueCents: 10000,
+            expiresAt: future(),
+          ),
+          throwsA(
+            isA<VoucherLedgerRejectedException>().having(
+              (e) => e.message,
+              'message',
+              contains('chaincode validation failed'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'redeemVoucher surfaces a non-duplicate ledger error as '
+      'VoucherLedgerRejectedException',
+      () async {
+        await repo.provisionVoucher(
+          code: 'CDC-041',
+          holderId: 'citizen-1',
+          category: 'groceries',
+          program: 'CDC Vouchers 2026',
+          faceValueCents: 10000,
+          expiresAt: future(),
+        );
+
+        ledger.forceNextCreateAssetError = 'chaincode validation failed';
+
+        expect(
+          () => repo.redeemVoucher(
+            code: 'CDC-041',
+            merchantId: 'merchant-1',
+            amountCents: 1000,
+          ),
+          throwsA(isA<VoucherLedgerRejectedException>()),
+        );
+      },
+    );
+  });
 }

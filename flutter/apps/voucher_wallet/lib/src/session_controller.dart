@@ -2,14 +2,30 @@ import 'package:flutter/foundation.dart';
 import 'package:nanayam_ledger_client/nanayam_ledger_client.dart';
 import 'package:nanayam_voucher_core/nanayam_voucher_core.dart';
 
+/// Builds the [NanayamLedgerClient] used for a given gateway URL. The
+/// default just constructs a real client; tests pass one that injects a
+/// fake `http.Client` instead, so [SessionController] never needs a live
+/// gateway to be unit-testable.
+typedef LedgerClientFactory = NanayamLedgerClient Function(String baseUrl);
+
+NanayamLedgerClient _defaultClientFactory(String baseUrl) =>
+    NanayamLedgerClient(baseUrl: baseUrl);
+
 /// Holds the app's single [NanayamLedgerClient] connection and the
 /// [VoucherLedgerRepository] built on top of it, and tracks whether the app
 /// is currently signed in to a Nanayam gateway.
 ///
 /// There is deliberately no dependency-injection framework here — this is a
 /// small example app, so a single `ChangeNotifier` exposed via an
-/// `InheritedNotifier` ([AppScope]) is enough.
+/// `InheritedNotifier` ([AppScope]) is enough. The one seam that matters for
+/// testing — how the gateway HTTP client gets built — is exposed via
+/// [LedgerClientFactory] instead.
 class SessionController extends ChangeNotifier {
+  SessionController({LedgerClientFactory? clientFactory})
+      : _clientFactory = clientFactory ?? _defaultClientFactory;
+
+  final LedgerClientFactory _clientFactory;
+
   NanayamLedgerClient? _client;
   VoucherLedgerRepository? _vouchers;
   LedgerUser? _currentUser;
@@ -50,7 +66,7 @@ class SessionController extends ChangeNotifier {
     _lastError = null;
     notifyListeners();
 
-    final client = NanayamLedgerClient(baseUrl: baseUrl);
+    final client = _clientFactory(baseUrl);
     try {
       await client.login(username: username, password: password);
       final user = await client.me();

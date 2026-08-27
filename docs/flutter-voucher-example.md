@@ -27,6 +27,80 @@ for how to run the app end to end. This document is the design write-up:
 *why* it's built this way, and what corners were knowingly cut because this
 is a sample, not a production system.
 
+## Quickstart
+
+Everything below assumes [Docker](https://docs.docker.com/get-docker/) and
+the [Flutter SDK](https://docs.flutter.dev/get-started/install) are already
+installed. Six steps, run from the repo root:
+
+1. **Install the Nanayam CLI** (skip if you already have it):
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/bytamilan/nanayam/main/install.sh | bash
+   ```
+
+2. **Bring up the Fabric network and deploy the sample chaincode:**
+
+   ```bash
+   nanayam prerequisites --auto
+   nanayam network up
+   nanayam channel create --name mychannel --profile TwoOrgsChannel
+   nanayam chaincode package --path ./chaincode/asset-transfer-basic --name basic
+   nanayam chaincode install --package basic.tar.gz
+   nanayam chaincode approve --name basic --channel mychannel --package-id <id from install>
+   nanayam chaincode commit --name basic --channel mychannel
+   ```
+
+   (Or use the classic scripts — `./scripts/setup-fabric.sh && ./scripts/start-fabric.sh
+   && ./scripts/deploy-chaincode.sh` — see the root [`README`](../README.md)
+   for both paths in full.)
+
+3. **Start the gateway:**
+
+   ```bash
+   nanayam gateway
+   ```
+
+   It listens on `:8080` and seeds a default `admin` / `admin` account on
+   first run (`AuthStore.SeedAdmin` in `services/gateway/auth.go`) — that's
+   what you'll sign into the app with below. Confirm it's up:
+
+   ```bash
+   curl http://localhost:8080/health   # {"status":"ok"}
+   ```
+
+4. **Bootstrap the Flutter workspace:**
+
+   ```bash
+   cd flutter
+   dart pub global activate melos   # once per machine
+   melos bootstrap
+   ```
+
+5. **Generate the app's platform folders and run it** (not checked in —
+   see [`flutter/apps/voucher_wallet/README.md`](../flutter/apps/voucher_wallet/README.md#running-it)
+   for why):
+
+   ```bash
+   cd apps/voucher_wallet
+   flutter create --org com.nanayam --platforms=android,ios,web .
+   flutter run -d chrome   # or an emulator/simulator/device of your choice
+   ```
+
+6. **Sign in** with `admin` / `admin` against `http://localhost:8080`
+   (pre-filled). On the **Provision** tab, issue a voucher to any holder ID;
+   switch to **Wallet** and load that holder ID to see it; switch to
+   **Redeem** and redeem part of its balance; reload the wallet to see the
+   updated balance and history.
+
+Running the packages' own test suites doesn't need any of the above — no
+Fabric network, no gateway, no device/emulator:
+
+```bash
+cd flutter
+melos run test
+```
+
 ## Packages before app
 
 Three of the four packages are intentionally not voucher-specific, so any

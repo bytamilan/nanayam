@@ -12,6 +12,12 @@ import 'package:http/testing.dart';
 class FakeLedger {
   final Map<String, Map<String, dynamic>> _assets = <String, Map<String, dynamic>>{};
 
+  /// When set, the next `CreateAsset` call fails with this message instead
+  /// of succeeding, then this is cleared. Lets a test exercise the
+  /// "the ledger rejected the request for some other reason" path without
+  /// needing a real chaincode-level validation rule to trigger it.
+  String? forceNextCreateAssetError;
+
   http.Client asClient() => MockClient(_handle);
 
   Future<http.Response> _handle(http.Request request) async {
@@ -30,6 +36,14 @@ class FakeLedger {
   http.Response _createAsset(http.Request request) {
     final body = jsonDecode(request.body) as Map<String, dynamic>;
     final assetId = body['assetId'] as String;
+    if (forceNextCreateAssetError != null) {
+      final error = forceNextCreateAssetError!;
+      forceNextCreateAssetError = null;
+      return http.Response(
+        jsonEncode({'success': false, 'error': error}),
+        200,
+      );
+    }
     if (_assets.containsKey(assetId)) {
       return http.Response(
         jsonEncode({

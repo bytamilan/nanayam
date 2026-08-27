@@ -17,6 +17,10 @@ see the per-tab doc comments for why):
 - **Provision** — issue a new voucher to a holder ID with a category,
   program name, face value, and expiry date.
 
+For a single numbered walkthrough covering the Fabric network, the gateway,
+and this app together, see
+[`docs/flutter-voucher-example.md`](../../../docs/flutter-voucher-example.md#quickstart).
+
 ## Running it
 
 1. Start a Nanayam gateway against a running Fabric network (see the main
@@ -45,11 +49,29 @@ see the per-tab doc comments for why):
    **Redeem** and redeem part of its balance — then reload the wallet to see
    the updated balance and redemption history.
 
+## Testing
+
+No Fabric network or gateway needed — everything is exercised against an
+in-memory fake gateway (`test/support/fake_gateway.dart`):
+
+```bash
+flutter test
+```
+
+`session_controller_test.dart` drives `SessionController` directly (login,
+bad credentials, logout, listener notifications); `login_flow_test.dart`
+drives the same paths through the actual `LoginScreen` widget tree, using
+`VoucherWalletApp(session: ...)` to inject a `SessionController` built with
+a fake `LedgerClientFactory` instead of a real gateway connection.
+
 ## How it's built
 
 - `SessionController` (`lib/src/session_controller.dart`) owns the single
   `NanayamLedgerClient` connection and the `VoucherLedgerRepository` built
-  on it, plus the signed-in user.
+  on it, plus the signed-in user. It builds that client through an
+  injectable `LedgerClientFactory` (real gateway by default) specifically so
+  tests can swap in a fake `http.Client` without touching the rest of the
+  app.
 - `AppScope` (`lib/src/app_scope.dart`) is a small `InheritedNotifier` that
   makes `SessionController` available to every screen — there's no
   state-management package dependency for an app this size.

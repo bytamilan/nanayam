@@ -6,14 +6,19 @@ import 'screens/login_screen.dart';
 import 'session_controller.dart';
 
 class VoucherWalletApp extends StatefulWidget {
-  const VoucherWalletApp({super.key});
+  /// [session] lets a test (or a future entry point) supply a
+  /// pre-configured [SessionController] — e.g. one built with a fake
+  /// [LedgerClientFactory] — instead of the real one `main.dart` uses.
+  const VoucherWalletApp({this.session, super.key});
+
+  final SessionController? session;
 
   @override
   State<VoucherWalletApp> createState() => _VoucherWalletAppState();
 }
 
 class _VoucherWalletAppState extends State<VoucherWalletApp> {
-  final SessionController _session = SessionController();
+  late final SessionController _session = widget.session ?? SessionController();
 
   @override
   void dispose() {

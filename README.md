@@ -269,6 +269,10 @@ example app, [`voucher_wallet`](flutter/apps/voucher_wallet), that provisions
 CDC-voucher-style vouchers to citizens and lets businesses redeem them, with
 every transaction recorded on the Nanayam sample ledger.
 
+Every package and the app itself have their own test suites — unit tests
+against hand-rolled fake gateways for the packages, widget tests driving the
+real screens for the app — none of which need a running Fabric network:
+
 ```bash
 cd flutter
 dart pub global activate melos
@@ -276,8 +280,9 @@ melos bootstrap
 melos run test
 ```
 
-See [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md) for
-the full design write-up.
+See [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md#quickstart)
+for a step-by-step guide covering the Fabric network, the gateway, and the
+app together, and the rest of that document for the full design write-up.
 
 ---
 

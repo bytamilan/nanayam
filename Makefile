@@ -1,14 +1,16 @@
 # Nanayam Makefile
 # Unified build system for the nanayam CLI and services
 
-.PHONY: all build install test clean lint build-all release-assets local
+.PHONY: all build install test test-cli test-gateway test-console clean lint fmt-check validate \
+        build-all release-assets local deploy-cloud
 
 BINARY_NAME=nanayam
 BUILD_DIR=./build
 RELEASE_DIR=$(BUILD_DIR)/release
 CLI_DIR=./cli
 GATEWAY_DIR=./services/gateway
-CONSOLE_DIR=./apps/operator-console
+CONSOLE_DIR=./apps/org-console
+PNPM?=pnpm
 
 VERSION?=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COMMIT?=$(shell git rev-parse --short HEAD 2>/dev/null || echo "none")
@@ -78,19 +80,47 @@ release-assets:
 gateway:
 	cd $(GATEWAY_DIR) && go build -o gateway .
 
-## console: Build the Next.js operator console
+## console: Build the Next.js org console
 console:
-	cd $(CONSOLE_DIR) && npm run build
+	cd $(CONSOLE_DIR) && $(PNPM) install --frozen-lockfile && $(PNPM) build
 
-## test: Run all tests
-test:
+## test: Run every test suite (CLI, gateway, console)
+test: test-cli test-gateway test-console
+
+## test-cli: Run the Go CLI unit tests
+test-cli:
 	cd $(CLI_DIR) && go test ./...
+
+## test-gateway: Run the Go gateway unit tests
+test-gateway:
 	cd $(GATEWAY_DIR) && go test ./...
+
+## test-console: Run the Next.js console unit tests
+test-console:
+	cd $(CONSOLE_DIR) && $(PNPM) install --frozen-lockfile && $(PNPM) test
 
 ## lint: Run linters
 lint:
 	cd $(CLI_DIR) && go vet ./...
 	cd $(GATEWAY_DIR) && go vet ./...
+
+## fmt-check: Fail if any Go file is not gofmt-formatted
+fmt-check:
+	@unformatted=$$(gofmt -l $(CLI_DIR) $(GATEWAY_DIR)); \
+	if [ -n "$$unformatted" ]; then \
+		echo "These files need gofmt:"; \
+		echo "$$unformatted"; \
+		exit 1; \
+	fi
+	@echo "All Go files are formatted"
+
+## validate: Run the full validation suite (format, lint, build, test)
+validate: fmt-check lint build test
+	@echo "Validation complete"
+
+## deploy-cloud: Deploy Nanayam to a Kubernetes cluster
+deploy-cloud:
+	bash ./scripts/deploy-cloud.sh $(ARGS)
 
 ## clean: Remove build artifacts
 clean:
@@ -112,4 +142,4 @@ fmt:
 help:
 	@echo "Nanayam Build System"
 	@echo ""
-	@sed -n 's/^##//p' $(MAKEFILE_LIST) | column -t -s ':' | sed -e 's/^/ /'
+	@sed -n 's/^## //p' $(MAKEFILE_LIST) | awk -F ': ' '{ printf "  %-16s %s\n", $$1, $$2 }'

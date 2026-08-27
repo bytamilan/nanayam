@@ -17,15 +17,15 @@ import (
 
 // GatewayConfig holds all parameters needed to connect to the Fabric network.
 type GatewayConfig struct {
-	MSP_ID          string
-	CryptoPath      string
-	PeerEndpoint    string
-	TLSCertPath     string
-	ChannelName     string
-	ChaincodeName   string
-	IdentityCert    string
-	IdentityKey     string
-	gateway         *client.Gateway // stored after Connect for ledger queries
+	MSP_ID        string
+	CryptoPath    string
+	PeerEndpoint  string
+	TLSCertPath   string
+	ChannelName   string
+	ChaincodeName string
+	IdentityCert  string
+	IdentityKey   string
+	gateway       *client.Gateway // stored after Connect for ledger queries
 }
 
 // NewGatewayFromEnv creates a GatewayConfig from environment variables.

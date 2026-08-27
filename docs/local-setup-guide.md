@@ -159,7 +159,7 @@ You should see a JSON array of sample assets.
 This script builds and starts the application layer:
 
 1. **Builds** the Go gateway Docker image (`services/gateway/Dockerfile`).
-2. **Builds** the Next.js console Docker image (`apps/operator-console/Dockerfile`).
+2. **Builds** the Next.js console Docker image (`apps/org-console/Dockerfile`).
 3. **Starts** both services on the shared `nanayam` Docker network.
 
 **Services available:**
@@ -245,4 +245,4 @@ The setup uses `arm64` Fabric images automatically. If you see architecture warn
 - Read `docs/hyperledger-fabric-guide.md` to understand Fabric internals.
 - Read `docs/nanayam-architecture.md` to understand how the components connect.
 - Modify `services/gateway/handler.go` to add new chaincode functions.
-- Extend the Operator Console UI in `apps/operator-console/src/components/`.
+- Extend the Operator Console UI in `apps/org-console/src/components/`.

@@ -204,12 +204,12 @@ func (s *RESTServer) handleLedgerBlocks(w http.ResponseWriter, r *http.Request) 
 	contract := network.GetContract("qscc")
 
 	type blockSummary struct {
-		Number        uint64 `json:"number"`
-		Hash          string `json:"hash"`
-		PrevHash      string `json:"prevHash"`
-		TxCount       int    `json:"txCount"`
-		Timestamp     string `json:"timestamp"`
-		DataHash      string `json:"dataHash"`
+		Number    uint64 `json:"number"`
+		Hash      string `json:"hash"`
+		PrevHash  string `json:"prevHash"`
+		TxCount   int    `json:"txCount"`
+		Timestamp string `json:"timestamp"`
+		DataHash  string `json:"dataHash"`
 	}
 
 	var blocks []blockSummary
@@ -269,10 +269,10 @@ func (s *RESTServer) handleLedgerActivity(w http.ResponseWriter, r *http.Request
 	}
 
 	writeJSON(w, http.StatusOK, map[string]interface{}{
-		"height":          height,
-		"complaintCount":  complaintCount,
-		"channel":         s.cfg.ChannelName,
-		"chaincode":       s.cfg.ChaincodeName,
+		"height":         height,
+		"complaintCount": complaintCount,
+		"channel":        s.cfg.ChannelName,
+		"chaincode":      s.cfg.ChaincodeName,
 	})
 }
 

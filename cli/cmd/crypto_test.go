@@ -7,7 +7,7 @@ import (
 )
 
 func TestResolveChannelArtifactConfigBasic(t *testing.T) {
-	cwd := "/Users/ajithberlin/Documents/GitHub/nanayam"
+	cwd := repoRoot(t)
 	configtxSource, profiles, err := resolveChannelArtifactConfig(cwd, filepath.Join(cwd, "config", "crypto-config.yaml"))
 	if err != nil {
 		t.Fatalf("resolveChannelArtifactConfig() error = %v", err)
@@ -28,7 +28,7 @@ func TestResolveChannelArtifactConfigBasic(t *testing.T) {
 }
 
 func TestResolveChannelArtifactConfigComplaint(t *testing.T) {
-	cwd := "/Users/ajithberlin/Documents/GitHub/nanayam"
+	cwd := repoRoot(t)
 	configtxSource, profiles, err := resolveChannelArtifactConfig(cwd, filepath.Join(cwd, "config", "crypto-config-complaint.yaml"))
 	if err != nil {
 		t.Fatalf("resolveChannelArtifactConfig() error = %v", err)

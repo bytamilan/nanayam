@@ -203,7 +203,7 @@ nanayam upgrade --dev-local --refresh --source /path/to/nanayam
 ```
 nanayam/
 ├── apps/
-│   └── operator-console/      # Next.js web UI
+│   └── org-console/           # Next.js web UI
 ├── cli/                       # Nanayam CLI (Go + Cobra)
 │   ├── cmd/                   # Command implementations
 │   ├── internal/              # Internal packages

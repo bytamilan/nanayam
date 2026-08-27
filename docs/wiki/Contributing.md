@@ -111,11 +111,19 @@ The wiki lives in `docs/wiki/` and is published to the GitHub Wiki automatically
 
 **Pages come in pairs.** `Architecture.md` and `Architecture-ta.md` are the same page in English and Tamil. When you change one, change the other. If you cannot write the Tamil, say so in the PR and someone will help — a Tamil page that silently drifts out of date is worse than an obviously missing one.
 
-Both versions link to each other at the top:
+Both versions link to each other at the top. Links between wiki pages carry
+the `.html` suffix, because GitHub Pages serves `Page-Name-ta.md` as
+`Page-Name-ta.html`:
 
 ```markdown
-**Languages:** **English** · [தமிழ்](Page-Name-ta)
+**Languages:** **English** · [தமிழ்](Page-Name-ta.html)
 ```
+
+`scripts/wiki-to-github-wiki.py` strips that suffix when publishing to the
+GitHub Wiki, which resolves links without an extension — so write the `.html`
+form in the source and let the converter handle the other surface. The two
+sidebar files, `_Sidebar.md` and `_Footer.md`, are wiki-only chrome that Jekyll
+never serves, so those link without the suffix.
 
 Diagrams are [Mermaid](https://mermaid.js.org/) in fenced ```mermaid blocks, which GitHub renders natively.
 

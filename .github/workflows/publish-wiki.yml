@@ -31,11 +31,27 @@ jobs:
         run: |
           set -euo pipefail
 
+          wiki_url="https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git"
+
           # A repository's wiki git remote does not exist until the wiki has
           # been created — Wikis enabled in Settings and one page saved. Until
           # then this is a configuration gap, not a build failure, so report it
           # and stop rather than failing every push to main.
-          if ! git ls-remote "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" >/dev/null 2>&1; then
+          #
+          # Only that specific case is skipped. An auth failure, a network
+          # blip, or a GitHub outage must fail loudly: treating them as "not
+          # initialised" would exit 0, print setup steps that are not the real
+          # problem, and leave the wiki silently stale.
+          if ! ls_remote_output=$(git ls-remote "$wiki_url" 2>&1); then
+            # Scrub the URL: the error text echoes it back, token and all.
+            ls_remote_output=${ls_remote_output//"$GITHUB_TOKEN"/***}
+
+            if ! printf '%s' "$ls_remote_output" | grep -qi "repository not found"; then
+              echo "Could not reach the wiki remote, and it is not a missing-wiki error:" >&2
+              printf '%s\n' "$ls_remote_output" >&2
+              exit 1
+            fi
+
             {
               echo "### Wiki not initialised"
               echo
@@ -52,7 +68,7 @@ jobs:
             exit 0
           fi
 
-          git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
+          git clone "$wiki_url" wiki
 
           # Convert the Pages-flavoured source into wiki-flavoured pages: strip
           # the Jekyll front matter and turn Page.html links back into the

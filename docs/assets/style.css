@@ -30,7 +30,7 @@ body {
   background: var(--bg);
   color: var(--fg);
   font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
-        "Noto Sans Tamil", "Latha", "Nirmala UI", Roboto, Helvetica, Arial, sans-serif;
+        "Noto Sans Tamil", Latha, "Nirmala UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .site-header {

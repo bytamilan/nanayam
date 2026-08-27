@@ -21,7 +21,7 @@ var consoleCmd = &cobra.Command{
 	Short: "Start the Next.js operator console",
 	Long: `Run the Next.js operator console UI locally or in Docker.
 
-Default runs 'npm run dev' in apps/operator-console/.`,
+Default runs 'npm run dev' in apps/org-console/.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		port, _ := cmd.Flags().GetString("port")
 		useDocker, _ := cmd.Flags().GetBool("docker")
@@ -32,7 +32,7 @@ Default runs 'npm run dev' in apps/operator-console/.`,
 		fmt.Printf("%s Starting operator console (port: %s, docker: %v)...\n", blue("→"), port, useDocker)
 
 		cwd, _ := os.Getwd()
-		consoleDir := filepath.Join(cwd, "apps", "operator-console")
+		consoleDir := filepath.Join(cwd, "apps", "org-console")
 
 		if useDocker {
 			fmt.Println("Building and running console Docker container...")

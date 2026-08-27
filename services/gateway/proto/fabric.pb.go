@@ -58,8 +58,8 @@ type SubmitComplaintResponse struct {
 
 type UpdateComplaintRequest struct {
 	ComplaintID string `json:"complaintId"`
-	Action      string `json:"action"`      // acknowledge, assign, updateStatus, addEvidence, requestClosure, approveClosure, reject
-	Value       string `json:"value"`       // new status / dept / reason / attachment
+	Action      string `json:"action"` // acknowledge, assign, updateStatus, addEvidence, requestClosure, approveClosure, reject
+	Value       string `json:"value"`  // new status / dept / reason / attachment
 }
 
 type UpdateComplaintResponse struct {

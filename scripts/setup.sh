@@ -11,7 +11,7 @@ k3d cluster create hlf-local \
 
 #update the server port
 kubectl config set-cluster k3d-hlf-local \
-  --server=https://127.0.0.1:543637
+  --server=https://127.0.0.1:6443
 
 # 2. Install the Fabric operator via Helm
 helm repo add kfs https://kfsoftware.github.io/hlf-helm-charts --force-update

@@ -13,9 +13,21 @@ const (
 	CAVersion     = "1.5.12"
 )
 
+// requiredBinaries are the Fabric CLI tools every command path depends on.
+var requiredBinaries = []string{"peer", "cryptogen", "configtxgen", "fabric-ca-client"}
+
 // Binaries holds paths to Fabric CLI tools
 type Binaries struct {
 	BinDir string
+}
+
+// binaryName returns the on-disk filename for a Fabric tool. Windows releases
+// ship .exe-suffixed binaries, so looking for the bare name never finds them.
+func binaryName(name string) string {
+	if runtime.GOOS == "windows" {
+		return name + ".exe"
+	}
+	return name
 }
 
 // NewBinaries finds Fabric binaries in common locations
@@ -43,8 +55,8 @@ func NewBinaries() *Binaries {
 }
 
 func hasFabricBinaries(dir string) bool {
-	for _, bin := range []string{"peer", "cryptogen", "configtxgen", "fabric-ca-client"} {
-		if _, err := os.Stat(filepath.Join(dir, bin)); os.IsNotExist(err) {
+	for _, bin := range requiredBinaries {
+		if _, err := os.Stat(filepath.Join(dir, binaryName(bin))); err != nil {
 			return false
 		}
 	}
@@ -53,29 +65,29 @@ func hasFabricBinaries(dir string) bool {
 
 // PeerPath returns the path to the peer binary
 func (b *Binaries) PeerPath() string {
-	return filepath.Join(b.BinDir, "peer")
+	return filepath.Join(b.BinDir, binaryName("peer"))
 }
 
 // CryptogenPath returns the path to cryptogen
 func (b *Binaries) CryptogenPath() string {
-	return filepath.Join(b.BinDir, "cryptogen")
+	return filepath.Join(b.BinDir, binaryName("cryptogen"))
 }
 
 // ConfigtxgenPath returns the path to configtxgen
 func (b *Binaries) ConfigtxgenPath() string {
-	return filepath.Join(b.BinDir, "configtxgen")
+	return filepath.Join(b.BinDir, binaryName("configtxgen"))
 }
 
 // CAClientPath returns the path to fabric-ca-client
 func (b *Binaries) CAClientPath() string {
-	return filepath.Join(b.BinDir, "fabric-ca-client")
+	return filepath.Join(b.BinDir, binaryName("fabric-ca-client"))
 }
 
 // CheckAll verifies all required binaries exist
 func (b *Binaries) CheckAll() error {
-	for _, name := range []string{"peer", "cryptogen", "configtxgen", "fabric-ca-client"} {
-		path := filepath.Join(b.BinDir, name)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
+	for _, name := range requiredBinaries {
+		path := filepath.Join(b.BinDir, binaryName(name))
+		if _, err := os.Stat(path); err != nil {
 			return fmt.Errorf("missing Fabric binary: %s (looked in %s)", name, b.BinDir)
 		}
 	}

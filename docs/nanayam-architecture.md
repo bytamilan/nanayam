@@ -54,7 +54,7 @@
 
 ## Component Breakdown
 
-### 1. Operator Console (`apps/operator-console/`)
+### 1. Operator Console (`apps/org-console/`)
 
 A Next.js 15 web application that provides a visual interface for interacting with the ledger.
 

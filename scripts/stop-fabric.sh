@@ -37,9 +37,9 @@ if [ "${CLEAN}" = true ]; then
     docker-compose -f "${COMPOSE_FILE}" down -v
 
     log_warn "Removing generated artifacts..."
-    rm -rf "${PWD}/crypto-config"
-    rm -rf "${PWD}/channel-artifacts"
-    rm -rf "${PWD}/bin"
+    rm -rf "${PWD:?}/crypto-config"
+    rm -rf "${PWD:?}/channel-artifacts"
+    rm -rf "${PWD:?}/bin"
 
     log_ok "Cleanup complete. Run ./scripts/setup-fabric.sh to regenerate everything."
 else

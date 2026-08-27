@@ -203,7 +203,7 @@ nanayam upgrade --dev-local --refresh --source /path/to/nanayam
 ```
 nanayam/
 ├── apps/
-│   └── operator-console/      # Next.js web UI
+│   └── org-console/           # Next.js web UI
 ├── cli/                       # Nanayam CLI (Go + Cobra)
 │   ├── cmd/                   # Command implementations
 │   ├── internal/              # Internal packages
@@ -253,11 +253,27 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 
 ## Documentation
 
+Full documentation lives in the **[Nanayam Wiki](https://github.com/bytamilan/nanayam/wiki)**, available in **English** and **தமிழ்**. The source is in [`docs/wiki/`](docs/wiki) and publishes automatically on every push to `main`.
+
+| Page | English | தமிழ் |
+|---|---|---|
+| Getting Started | [EN](https://github.com/bytamilan/nanayam/wiki/Getting-Started) | [TA](https://github.com/bytamilan/nanayam/wiki/Getting-Started-ta) |
+| Architecture | [EN](https://github.com/bytamilan/nanayam/wiki/Architecture) | [TA](https://github.com/bytamilan/nanayam/wiki/Architecture-ta) |
+| CLI Reference | [EN](https://github.com/bytamilan/nanayam/wiki/CLI-Reference) | [TA](https://github.com/bytamilan/nanayam/wiki/CLI-Reference-ta) |
+| Cloud Deployment | [EN](https://github.com/bytamilan/nanayam/wiki/Cloud-Deployment) | [TA](https://github.com/bytamilan/nanayam/wiki/Cloud-Deployment-ta) |
+| API Reference | [EN](https://github.com/bytamilan/nanayam/wiki/API-Reference) | [TA](https://github.com/bytamilan/nanayam/wiki/API-Reference-ta) |
+| Testing | [EN](https://github.com/bytamilan/nanayam/wiki/Testing) | [TA](https://github.com/bytamilan/nanayam/wiki/Testing-ta) |
+| Troubleshooting | [EN](https://github.com/bytamilan/nanayam/wiki/Troubleshooting) | [TA](https://github.com/bytamilan/nanayam/wiki/Troubleshooting-ta) |
+| Contributing | [EN](https://github.com/bytamilan/nanayam/wiki/Contributing) | [TA](https://github.com/bytamilan/nanayam/wiki/Contributing-ta) |
+
+Reference material also lives alongside the code:
+
 | Document | Description |
 |----------|-------------|
 | [`docs/local-setup-guide.md`](docs/local-setup-guide.md) | Complete local development setup |
 | [`docs/hyperledger-fabric-guide.md`](docs/hyperledger-fabric-guide.md) | Hyperledger Fabric concepts & internals |
 | [`docs/nanayam-architecture.md`](docs/nanayam-architecture.md) | How Nanayam components interact |
+| [`docs/complaint-system.md`](docs/complaint-system.md) | The grievance workflow in detail |
 
 ---
 
@@ -281,14 +297,39 @@ docker-compose -f docker/apps.yaml down
 
 ---
 
-## Production Deployment
+## Cloud Deployment
 
-For Kubernetes / GKE deployments, the project includes a Fabric Operator workflow:
+One command deploys the gateway and console to any Kubernetes cluster your `kubectl` points at — GKE, EKS, AKS, k3d, kind, or self-managed:
 
-- `.github/workflows/deploy-fabric-operator.yml` — CI/CD for GKE
-- `scripts/setup.sh` — k3d local cluster with HLF Operator, Istio, and Helm
+```bash
+./scripts/deploy-cloud.sh --registry ghcr.io/bytamilan --domain nanayam.example.com
+```
 
-See the existing operator setup for production-grade orchestration.
+It builds and pushes both images, uploads the Fabric crypto material and a generated JWT secret, applies the manifests in [`k8s/`](k8s), and waits for the rollout.
+
+```bash
+./scripts/deploy-cloud.sh --help                      # every flag
+./scripts/deploy-cloud.sh --registry … --dry-run      # preview, no cluster needed
+./scripts/deploy-cloud.sh --registry … --profile complaint
+./scripts/deploy-cloud.sh --destroy                   # tear it all down
+```
+
+Full guide: [Cloud Deployment](https://github.com/bytamilan/nanayam/wiki/Cloud-Deployment) ([தமிழ்](https://github.com/bytamilan/nanayam/wiki/Cloud-Deployment-ta)).
+
+Also available:
+
+- `.github/workflows/ci.yml` — tests, linting, and manifest validation on every push
+- `.github/workflows/deploy-fabric-operator.yml` — CD to GKE via Workload Identity Federation
+- `scripts/setup.sh` — k3d local cluster with the HLF Operator, Istio, and Helm
+
+### Testing
+
+```bash
+make test        # CLI, gateway, and console suites
+make validate    # formatting, linting, build, and tests
+```
+
+See [Testing](https://github.com/bytamilan/nanayam/wiki/Testing) ([தமிழ்](https://github.com/bytamilan/nanayam/wiki/Testing-ta)).
 
 ---
 ## Notebook LLM

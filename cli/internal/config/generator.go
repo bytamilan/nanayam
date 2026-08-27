@@ -13,17 +13,17 @@ import (
 
 // PeerNodeConfig holds parameters for peer node initialization
 type PeerNodeConfig struct {
-	OrgName      string
-	OrgDomain    string
-	Domain       string
-	PeerCount    int
-	UserCount    int
-	PeerID       string
-	PeerPort     int
+	OrgName       string
+	OrgDomain     string
+	Domain        string
+	PeerCount     int
+	UserCount     int
+	PeerID        string
+	PeerPort      int
 	ChaincodePort int
-	OpsPort      int
-	MSPID        string
-	CryptoPath   string
+	OpsPort       int
+	MSPID         string
+	CryptoPath    string
 }
 
 // OrdererNodeConfig holds parameters for orderer node initialization

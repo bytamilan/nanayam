@@ -152,11 +152,14 @@ jobs:
 
       # Pinned to the Jekyll version GitHub Pages runs, so this build
       # reproduces what actually gets deployed rather than whatever is newest.
+      # kramdown-parser-gfm is a separate gem that Jekyll 3.x needs to honour
+      # `kramdown.input: GFM`; the github-pages bundle ships it, a bare jekyll
+      # install does not.
       - name: Build the documentation site
         working-directory: docs
         run: |
           set -euo pipefail
-          gem install jekyll -v 3.9.5 --no-document
+          gem install 'jekyll:3.9.5' 'kramdown-parser-gfm:1.1.0' --no-document
           jekyll build
 
       # GitHub Pages deploys from main without reporting a broken link or a

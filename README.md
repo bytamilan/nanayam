@@ -64,6 +64,34 @@ nanayam network up --profile complaint
 
 When you use `--config`, Nanayam uses only the compose file you specify. Automatic recovery is available for the built-in network configs above; custom compose files must provide their own crypto and channel artifacts.
 
+### One Script: Server Only
+
+> Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
+> Nothing else to install — no Go, no CLI, no Node.
+
+For the *server* side only — the Fabric network and the gateway, no
+operator console, no client apps — one command brings everything up, and
+is safe to re-run (each stage is skipped if it's already done):
+
+```bash
+# macOS / Linux
+./scripts/start-server.sh
+
+# Windows (PowerShell or double-click)
+.\scripts\start-server.ps1
+```
+
+```bash
+./scripts/start-server.sh --down    # stop it, keep generated crypto/data
+./scripts/start-server.sh --clean   # stop it and wipe crypto/channel data
+```
+
+The Windows script delegates to the same `start-server.sh` through WSL or
+Git Bash's `bash.exe` (Docker Desktop on Windows runs Linux containers
+through one of those anyway, so this isn't an extra dependency). See
+[`docker container images`](#container-images) below if you'd rather run a
+pre-built gateway image instead of building it locally.
+
 ### Classic Script Setup
 
 > Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
@@ -230,7 +258,10 @@ nanayam/
 │   ├── start-fabric.sh        # Start Fabric network
 │   ├── stop-fabric.sh         # Stop Fabric network
 │   ├── deploy-chaincode.sh    # Deploy asset-transfer chaincode
-│   └── start-distribution.sh  # Start gateway + console
+│   ├── start-distribution.sh  # Start gateway + console
+│   ├── start-server.sh        # One-shot server-only start (Mac/Linux)
+│   ├── start-server.ps1       # One-shot server-only start (Windows)
+│   └── start-server.cmd       # CMD wrapper for start-server.ps1
 ├── services/
 │   └── gateway/               # Go gRPC/REST distribution server
 ├── install.sh                 # One-liner installer (macOS/Linux)
@@ -251,6 +282,41 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 | Create | `CreateAsset` | `POST /v1/CreateAsset` | Submit a new asset |
 | Read | `QueryAsset` | `GET /v1/QueryAsset?assetId=` | Read a single asset |
 | List | `ListAssets` | `GET /v1/ListAssets` | List all asset IDs |
+
+---
+
+## Container Images
+
+`.github/workflows/release-containers.yml` builds and publishes the
+gateway's container image to the GitHub Container Registry on every version
+tag (`v*`) push, and on demand via `workflow_dispatch`:
+
+```
+ghcr.io/bytamilan/nanayam-gateway:latest
+ghcr.io/bytamilan/nanayam-gateway:v1.2.3
+ghcr.io/bytamilan/nanayam-gateway:sha-abcdef0
+```
+
+Images are built for `linux/amd64` and `linux/arm64`. Only the gateway is
+published this way — it's the one server-side piece this repo owns and
+builds; `docker/apps.yaml` (and `scripts/start-server.sh`) already build it
+locally with the same Dockerfile, so publishing it separately just saves a
+build the next time you (or CI, or a Kubernetes deployment) need the image
+and don't want to build from source. The operator console and any Flutter
+app are clients, not servers, and aren't published by this workflow.
+
+```bash
+docker pull ghcr.io/bytamilan/nanayam-gateway:latest
+docker run -d --name nanayam-gateway --network nanayam \
+  -p 8080:8080 -p 50051:50051 \
+  -e FABRIC_CHANNEL=mychannel -e FABRIC_CHAINCODE=basic -e MSP_ID=Org1MSP \
+  -v "$(pwd)/crypto-config/peerOrganizations/org1.nanayam.com:/app/crypto:ro" \
+  ghcr.io/bytamilan/nanayam-gateway:latest
+```
+
+(A freshly published package on GHCR is private by default — an org/repo
+admin makes it public once under the package's own Settings → Danger Zone
+→ Change visibility, the same one-time step any GHCR image needs.)
 
 ---
 
@@ -316,6 +382,10 @@ Reference material also lives alongside the code:
 ## Stopping the Stack
 
 ```bash
+# If you started with ./scripts/start-server.sh
+./scripts/start-server.sh --down     # Stop the server stack (preserves data)
+./scripts/start-server.sh --clean    # Stop it and wipe all data
+
 # Using the CLI
 nanayam network down          # Stop Fabric network
 nanayam network clean         # Stop and wipe all data

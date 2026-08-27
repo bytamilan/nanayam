@@ -2,7 +2,7 @@
 # Unified build system for the nanayam CLI and services
 
 .PHONY: all build install test test-cli test-gateway test-console clean lint fmt-check validate \
-        build-all release-assets local deploy-cloud
+        build-all release-assets local deploy-cloud server server-down
 
 BINARY_NAME=nanayam
 BUILD_DIR=./build
@@ -121,6 +121,14 @@ validate: fmt-check lint build test
 ## deploy-cloud: Deploy Nanayam to a Kubernetes cluster
 deploy-cloud:
 	bash ./scripts/deploy-cloud.sh $(ARGS)
+
+## server: Bring up the server stack (Fabric network + gateway, no clients) — Mac/Linux
+server:
+	bash ./scripts/start-server.sh
+
+## server-down: Stop the server stack started by 'make server'
+server-down:
+	bash ./scripts/start-server.sh --down
 
 ## clean: Remove build artifacts
 clean:

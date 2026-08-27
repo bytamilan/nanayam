@@ -46,8 +46,11 @@ else
   BLUE=""; GREEN=""; YELLOW=""; RED=""; BOLD=""; RESET=""
 fi
 
-step() { printf '%s→%s %s\n' "$BLUE" "$RESET" "$*"; }
-ok()   { printf '%s✓%s %s\n' "$GREEN" "$RESET" "$*"; }
+# Progress and status go to stderr so stdout carries only real output: with
+# --dry-run that is the rendered manifests, and a status line mixed into them
+# would make the YAML unparseable for anything consuming it.
+step() { printf '%s→%s %s\n' "$BLUE" "$RESET" "$*" >&2; }
+ok()   { printf '%s✓%s %s\n' "$GREEN" "$RESET" "$*" >&2; }
 warn() { printf '%s!%s %s\n' "$YELLOW" "$RESET" "$*" >&2; }
 die()  { printf '%s✗%s %s\n' "$RED" "$RESET" "$*" >&2; exit 1; }
 
@@ -328,24 +331,27 @@ wait_for_rollout() {
 }
 
 print_access_instructions() {
-  printf '\n%sNanayam is deployed.%s\n\n' "$BOLD" "$RESET"
+  # Grouped so every line lands on stderr; stdout is reserved for data.
+  {
+    printf '\n%sNanayam is deployed.%s\n\n' "$BOLD" "$RESET"
 
-  if [[ -n "$DOMAIN" ]]; then
-    printf '  Console:  https://%s\n' "$DOMAIN"
-    printf '  Gateway:  https://%s/v1\n' "$DOMAIN"
-    printf '  Health:   https://%s/health\n\n' "$DOMAIN"
-    printf '  DNS for %s must point at your ingress controller:\n' "$DOMAIN"
-    printf '    kubectl get ingress -n %s\n\n' "$NAMESPACE"
-  else
-    printf '  No --domain was given, so the deployment is cluster-internal.\n'
-    printf '  Reach it with port-forwarding:\n\n'
-    printf '    kubectl -n %s port-forward svc/nanayam-console 3000:3000\n' "$NAMESPACE"
-    printf '    kubectl -n %s port-forward svc/nanayam-gateway 8080:8080\n\n' "$NAMESPACE"
-    printf '  Then open http://localhost:3000\n\n'
-  fi
+    if [[ -n "$DOMAIN" ]]; then
+      printf '  Console:  https://%s\n' "$DOMAIN"
+      printf '  Gateway:  https://%s/v1\n' "$DOMAIN"
+      printf '  Health:   https://%s/health\n\n' "$DOMAIN"
+      printf '  DNS for %s must point at your ingress controller:\n' "$DOMAIN"
+      printf '    kubectl get ingress -n %s\n\n' "$NAMESPACE"
+    else
+      printf '  No --domain was given, so the deployment is cluster-internal.\n'
+      printf '  Reach it with port-forwarding:\n\n'
+      printf '    kubectl -n %s port-forward svc/nanayam-console 3000:3000\n' "$NAMESPACE"
+      printf '    kubectl -n %s port-forward svc/nanayam-gateway 8080:8080\n\n' "$NAMESPACE"
+      printf '  Then open http://localhost:3000\n\n'
+    fi
 
-  printf '  Default sign-in is admin / admin. Change it before exposing this deployment.\n'
-  printf '  Tear everything down with: ./scripts/deploy-cloud.sh --destroy --namespace %s\n\n' "$NAMESPACE"
+    printf '  Default sign-in is admin / admin. Change it before exposing this deployment.\n'
+    printf '  Tear everything down with: ./scripts/deploy-cloud.sh --destroy --namespace %s\n\n' "$NAMESPACE"
+  } >&2
 }
 
 destroy() {

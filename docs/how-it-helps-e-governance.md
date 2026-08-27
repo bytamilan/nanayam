@@ -1,3 +1,8 @@
+---
+layout: default
+title: how-it-helps-e-governance
+---
+
 ## How Nanayam Applies to E-Governance
 
 This permissioned Fabric setup maps exceptionally well to **e-governance** because governments need exactly what Fabric provides: **known participants, auditable history, data privacy, and no cryptocurrency**. Here's how:

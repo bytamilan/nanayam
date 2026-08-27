@@ -6,6 +6,7 @@ on:
     paths:
       - 'docs/wiki/**'
       - '.github/workflows/publish-wiki.yml'
+      - 'scripts/wiki-to-github-wiki.py'
   workflow_dispatch:
 
 permissions:
@@ -21,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check every page has both languages
+      - name: Validate wiki source
         run: python3 scripts/check-wiki.py
 
       - name: Publish to the GitHub Wiki
@@ -30,13 +31,33 @@ jobs:
         run: |
           set -euo pipefail
 
+          # A repository's wiki git remote does not exist until the wiki has
+          # been created — Wikis enabled in Settings and one page saved. Until
+          # then this is a configuration gap, not a build failure, so report it
+          # and stop rather than failing every push to main.
+          if ! git ls-remote "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" >/dev/null 2>&1; then
+            {
+              echo "### Wiki not initialised"
+              echo
+              echo "\`${GITHUB_REPOSITORY}.wiki.git\` does not exist yet, so there was nothing to publish to."
+              echo
+              echo "To enable this workflow, once:"
+              echo "1. Settings → Features → tick **Wikis**"
+              echo "2. Open the Wiki tab and save any page (its content is overwritten on the next run)"
+              echo
+              echo "The same documentation is already published to GitHub Pages regardless:"
+              echo "https://bytamilan.github.io/nanayam/"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "Wiki not initialised; skipping publish."
+            exit 0
+          fi
+
           git clone "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.wiki.git" wiki
 
-          # Replace the published pages wholesale so a deleted source page also
-          # disappears from the wiki, while keeping the wiki's own git history.
-          find wiki -maxdepth 1 -name '*.md' -delete
-          cp docs/wiki/*.md wiki/
-          rm -f wiki/README.md   # the source README documents the directory, not the wiki
+          # Convert the Pages-flavoured source into wiki-flavoured pages: strip
+          # the Jekyll front matter and turn Page.html links back into the
+          # extensionless form GitHub Wiki resolves.
+          python3 scripts/wiki-to-github-wiki.py docs/wiki wiki
 
           cd wiki
           git config user.name "github-actions[bot]"

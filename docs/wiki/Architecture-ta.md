@@ -1,6 +1,12 @@
+---
+layout: default
+title: கட்டமைப்பு
+lang: ta
+---
+
 # கட்டமைப்பு
 
-**மொழிகள்:** [English](Architecture) · **தமிழ்**
+**மொழிகள்:** [English](Architecture.html) · **தமிழ்**
 
 ---
 
@@ -200,6 +206,6 @@ sequenceDiagram
 
 ## மேலும் பார்க்க
 
-- [API கையேடு](API-Reference-ta) — endpoint-கள் விரிவாக
-- [கிளவுட் நிறுவல்](Cloud-Deployment-ta) — இது Kubernetes-இல் எப்படி இணைகிறது
+- [API கையேடு](API-Reference-ta.html) — endpoint-கள் விரிவாக
+- [கிளவுட் நிறுவல்](Cloud-Deployment-ta.html) — இது Kubernetes-இல் எப்படி இணைகிறது
 - [`docs/hyperledger-fabric-guide.md`](https://github.com/bytamilan/nanayam/blob/main/docs/hyperledger-fabric-guide.md) — Fabric கருத்துகள் அடிப்படையிலிருந்து

@@ -1,6 +1,12 @@
+---
+layout: default
+title: சோதனை
+lang: ta
+---
+
 # சோதனை
 
-**மொழிகள்:** [English](Testing) · **தமிழ்**
+**மொழிகள்:** [English](Testing.html) · **தமிழ்**
 
 ---
 

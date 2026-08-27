@@ -1,3 +1,8 @@
+---
+layout: default
+title: Nanayam Architecture
+---
+
 # Nanayam Architecture
 
 > This document describes how the Nanayam components interact to form a complete decentralized private ledger stack.

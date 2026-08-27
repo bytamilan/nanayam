@@ -1,6 +1,12 @@
+---
+layout: default
+title: Architecture
+lang: en
+---
+
 # Architecture
 
-**Languages:** **English** · [தமிழ்](Architecture-ta)
+**Languages:** **English** · [தமிழ்](Architecture-ta.html)
 
 ---
 
@@ -200,6 +206,6 @@ The validation step re-checks the read set against current state. If another tra
 
 ## See also
 
-- [API Reference](API-Reference) — the endpoints in detail
-- [Cloud Deployment](Cloud-Deployment) — how this maps onto Kubernetes
+- [API Reference](API-Reference.html) — the endpoints in detail
+- [Cloud Deployment](Cloud-Deployment.html) — how this maps onto Kubernetes
 - [`docs/hyperledger-fabric-guide.md`](https://github.com/bytamilan/nanayam/blob/main/docs/hyperledger-fabric-guide.md) — Fabric concepts from first principles

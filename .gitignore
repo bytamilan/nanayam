@@ -39,3 +39,6 @@ pnpm-debug.log*
 *.tar.gz
 **_bin
 /build/**
+# Jekyll build output for the docs site
+_site/
+.jekyll-cache/

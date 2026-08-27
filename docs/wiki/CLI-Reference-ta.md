@@ -1,6 +1,12 @@
+---
+layout: default
+title: CLI கையேடு
+lang: ta
+---
+
 # CLI கையேடு
 
-**மொழிகள்:** [English](CLI-Reference) · **தமிழ்**
+**மொழிகள்:** [English](CLI-Reference.html) · **தமிழ்**
 
 ஒவ்வொரு கட்டளையும் `--help` ஆதரிக்கிறது. பொது flag-கள்: மாற்று அமைப்பைச் சுட்ட `--config <கோப்பு>`, விரிவான வெளியீட்டுக்கு `--verbose`.
 
@@ -104,7 +110,7 @@ nanayam user enroll --id alice --secret alicepw --org Org1
 nanayam user list --org Org1
 ```
 
-இவை **Fabric அடையாளங்களை** நிர்வகிக்கின்றன — CA-விலிருந்து வரும் X.509 சான்றிதழ்கள். கன்சோல் கணக்குகள் தனியானவை; [கட்டமைப்பு](Architecture-ta) பார்க்கவும்.
+இவை **Fabric அடையாளங்களை** நிர்வகிக்கின்றன — CA-விலிருந்து வரும் X.509 சான்றிதழ்கள். கன்சோல் கணக்குகள் தனியானவை; [கட்டமைப்பு](Architecture-ta.html) பார்க்கவும்.
 
 ---
 

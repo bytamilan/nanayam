@@ -1,6 +1,12 @@
+---
+layout: default
+title: CLI Reference
+lang: en
+---
+
 # CLI Reference
 
-**Languages:** **English** · [தமிழ்](CLI-Reference-ta)
+**Languages:** **English** · [தமிழ்](CLI-Reference-ta.html)
 
 Every command supports `--help`. Global flags: `--config <file>` to point at an alternate config, `--verbose` for detailed output.
 
@@ -104,7 +110,7 @@ nanayam user enroll --id alice --secret alicepw --org Org1
 nanayam user list --org Org1
 ```
 
-These manage **Fabric identities** — X.509 certificates from the CA. Console accounts are separate; see [Architecture](Architecture).
+These manage **Fabric identities** — X.509 certificates from the CA. Console accounts are separate; see [Architecture](Architecture.html).
 
 ---
 

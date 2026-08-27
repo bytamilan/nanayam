@@ -1,3 +1,8 @@
+---
+layout: default
+title: Anti-Corruption Complaint System
+---
+
 # Anti-Corruption Complaint System
 
 > A Hyperledger Fabric prototype demonstrating **multi-authority workflow enforcement** where no single department can suppress or alter a complaint.

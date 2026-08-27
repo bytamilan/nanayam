@@ -1,6 +1,12 @@
+---
+layout: default
+title: Getting Started
+lang: en
+---
+
 # Getting Started
 
-**Languages:** **English** · [தமிழ்](Getting-Started-ta)
+**Languages:** **English** · [தமிழ்](Getting-Started-ta.html)
 
 This page takes you from an empty machine to a running ledger with data in it. Budget about fifteen minutes, most of it waiting on downloads.
 
@@ -153,7 +159,7 @@ nanayam network clean    # stop and wipe everything
 
 ## Where next
 
-- [Architecture](Architecture) — what each component actually does
-- [CLI Reference](CLI-Reference) — every command and flag
-- [Cloud Deployment](Cloud-Deployment) — the same stack on Kubernetes
-- [Troubleshooting](Troubleshooting) — when a step above did not go to plan
+- [Architecture](Architecture.html) — what each component actually does
+- [CLI Reference](CLI-Reference.html) — every command and flag
+- [Cloud Deployment](Cloud-Deployment.html) — the same stack on Kubernetes
+- [Troubleshooting](Troubleshooting.html) — when a step above did not go to plan

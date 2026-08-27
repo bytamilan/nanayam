@@ -1,6 +1,12 @@
+---
+layout: default
+title: Troubleshooting
+lang: en
+---
+
 # Troubleshooting
 
-**Languages:** **English** · [தமிழ்](Troubleshooting-ta)
+**Languages:** **English** · [தமிழ்](Troubleshooting-ta.html)
 
 ---
 
@@ -186,7 +192,7 @@ Or with the deploy script: `--enable-signup`.
 
 ## Tests fail with a path error
 
-If a test fails with a path under `/Users/…` or `/home/…` that is not yours, it hardcodes someone's machine. Use `t.TempDir()` or `repoRoot(t)` instead — see [Testing](Testing).
+If a test fails with a path under `/Users/…` or `/home/…` that is not yours, it hardcodes someone's machine. Use `t.TempDir()` or `repoRoot(t)` instead — see [Testing](Testing.html).
 
 ---
 

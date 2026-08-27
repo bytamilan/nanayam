@@ -1,6 +1,12 @@
+---
+layout: default
+title: API கையேடு
+lang: ta
+---
+
 # API கையேடு
 
-**மொழிகள்:** [English](API-Reference) · **தமிழ்**
+**மொழிகள்:** [English](API-Reference.html) · **தமிழ்**
 
 Gateway ஒரே செயல்பாடுகளை REST (`:8080`) மற்றும் gRPC (`:50051`) இரண்டின் மூலமும் வெளிப்படுத்துகிறது.
 

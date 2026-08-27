@@ -1,6 +1,12 @@
+---
+layout: default
+title: Cloud Deployment
+lang: en
+---
+
 # Cloud Deployment
 
-**Languages:** **English** · [தமிழ்](Cloud-Deployment-ta)
+**Languages:** **English** · [தமிழ்](Cloud-Deployment-ta.html)
 
 `scripts/deploy-cloud.sh` deploys the gateway and console to any Kubernetes cluster your `kubectl` currently points at — GKE, EKS, AKS, k3d, kind, or a self-managed cluster.
 
@@ -229,6 +235,6 @@ Optional variables: `NANAYAM_NAMESPACE`, `NANAYAM_DOMAIN`.
 
 ## See also
 
-- [Getting Started](Getting-Started) — local development first
-- [Architecture](Architecture) — what these components do
-- [Troubleshooting](Troubleshooting) — when a rollout does not complete
+- [Getting Started](Getting-Started.html) — local development first
+- [Architecture](Architecture.html) — what these components do
+- [Troubleshooting](Troubleshooting.html) — when a rollout does not complete

@@ -1,6 +1,12 @@
+---
+layout: default
+title: கிளவுட் நிறுவல்
+lang: ta
+---
+
 # கிளவுட் நிறுவல்
 
-**மொழிகள்:** [English](Cloud-Deployment) · **தமிழ்**
+**மொழிகள்:** [English](Cloud-Deployment.html) · **தமிழ்**
 
 `scripts/deploy-cloud.sh`, உங்கள் `kubectl` தற்போது சுட்டும் எந்த Kubernetes கிளஸ்டரிலும் gateway-யையும் கன்சோலையும் நிறுவும் — GKE, EKS, AKS, k3d, kind, அல்லது நீங்களே நிர்வகிக்கும் கிளஸ்டர்.
 
@@ -229,6 +235,6 @@ curl http://localhost:8080/health
 
 ## மேலும் பார்க்க
 
-- [தொடங்குதல்](Getting-Started-ta) — முதலில் உள்ளூர் மேம்பாடு
-- [கட்டமைப்பு](Architecture-ta) — இந்தப் பகுதிகள் என்ன செய்கின்றன
-- [சிக்கல் தீர்வு](Troubleshooting-ta) — rollout முடியாதபோது
+- [தொடங்குதல்](Getting-Started-ta.html) — முதலில் உள்ளூர் மேம்பாடு
+- [கட்டமைப்பு](Architecture-ta.html) — இந்தப் பகுதிகள் என்ன செய்கின்றன
+- [சிக்கல் தீர்வு](Troubleshooting-ta.html) — rollout முடியாதபோது

@@ -1,6 +1,12 @@
+---
+layout: default
+title: Testing
+lang: en
+---
+
 # Testing
 
-**Languages:** **English** · [தமிழ்](Testing-ta)
+**Languages:** **English** · [தமிழ்](Testing-ta.html)
 
 ---
 

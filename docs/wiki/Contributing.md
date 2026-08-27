@@ -1,6 +1,12 @@
+---
+layout: default
+title: Contributing
+lang: en
+---
+
 # Contributing
 
-**Languages:** **English** · [தமிழ்](Contributing-ta)
+**Languages:** **English** · [தமிழ்](Contributing-ta.html)
 
 ---
 
@@ -90,7 +96,7 @@ A change to a documented behaviour that leaves the docs stale is not finished.
 
 ## Tests
 
-Every bug fix should come with a test that fails without it. See [Testing](Testing) for conventions — the short version:
+Every bug fix should come with a test that fails without it. See [Testing](Testing.html) for conventions — the short version:
 
 - No hardcoded absolute paths. Use `t.TempDir()` or `repoRoot(t)`.
 - Name tests after the behaviour they guarantee.

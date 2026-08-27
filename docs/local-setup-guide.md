@@ -1,3 +1,8 @@
+---
+layout: default
+title: Local Setup Guide
+---
+
 # Local Setup Guide
 
 > Get the complete Nanayam stack running on your local machine with Docker Compose.
@@ -125,7 +130,7 @@ If the built-in Fabric certificates or channel artifacts are missing, the CLI wi
 
 **Verify it's running:**
 ```bash
-docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+{% raw %}docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"{% endraw %}
 ```
 
 You should see all 6 containers in `Up` status.

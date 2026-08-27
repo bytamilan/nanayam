@@ -136,15 +136,30 @@ jobs:
           ignore_paths: node_modules
 
   docs:
-    name: Wiki
+    name: Docs site
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      # Catches a missing Tamil translation, a link to a page that does not
-      # exist, and a .md extension the wiki would not resolve.
+      # Catches a missing Tamil translation, a page without front matter (which
+      # Pages would serve as raw markdown), and links that would not resolve.
       - name: Validate wiki source
         run: python3 scripts/check-wiki.py
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      - name: Build the documentation site
+        run: |
+          set -euo pipefail
+          gem install jekyll --no-document
+          cd docs && jekyll build
+
+      # GitHub Pages deploys from main without reporting a broken link or a
+      # missing index, so the built site is checked here instead.
+      - name: Check the built site
+        run: python3 scripts/check-site.py docs/_site
 
   manifests:
     name: Kubernetes manifests

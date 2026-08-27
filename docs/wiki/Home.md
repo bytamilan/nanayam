@@ -1,8 +1,14 @@
+---
+layout: default
+title: Home
+lang: en
+---
+
 # Nanayam Wiki
 
 > **நாணயம்** — a Tamil word meaning both *coin* and *integrity*. A ledger should carry both.
 
-**Languages:** **English** · [தமிழ்](Home-ta)
+**Languages:** **English** · [தமிழ்](Home-ta.html)
 
 Nanayam is a private, permissioned Web3 ledger built on [Hyperledger Fabric](https://www.hyperledger.org/use/fabric). It ships a complete stack: a Fabric network, a Go gateway that speaks gRPC and REST, and a Next.js console — plus one CLI that drives all of it.
 
@@ -12,14 +18,14 @@ Nanayam is a private, permissioned Web3 ledger built on [Hyperledger Fabric](htt
 
 | I want to… | Go to |
 |---|---|
-| Run Nanayam on my laptop in ten minutes | [Getting Started](Getting-Started) |
-| Understand how the pieces fit together | [Architecture](Architecture) |
-| Look up a command | [CLI Reference](CLI-Reference) |
-| Deploy to a cloud cluster | [Cloud Deployment](Cloud-Deployment) |
-| Call the gateway from my own code | [API Reference](API-Reference) |
-| Run or write tests | [Testing](Testing) |
-| Fix something that broke | [Troubleshooting](Troubleshooting) |
-| Contribute a change | [Contributing](Contributing) |
+| Run Nanayam on my laptop in ten minutes | [Getting Started](Getting-Started.html) |
+| Understand how the pieces fit together | [Architecture](Architecture.html) |
+| Look up a command | [CLI Reference](CLI-Reference.html) |
+| Deploy to a cloud cluster | [Cloud Deployment](Cloud-Deployment.html) |
+| Call the gateway from my own code | [API Reference](API-Reference.html) |
+| Run or write tests | [Testing](Testing.html) |
+| Fix something that broke | [Troubleshooting](Troubleshooting.html) |
+| Contribute a change | [Contributing](Contributing.html) |
 
 ---
 
@@ -71,7 +77,7 @@ nanayam prerequisites --auto
 nanayam network up
 ```
 
-Then open <http://localhost:3000>. The full walkthrough, including what each step actually does, is in [Getting Started](Getting-Started).
+Then open <http://localhost:3000>. The full walkthrough, including what each step actually does, is in [Getting Started](Getting-Started.html).
 
 ---
 

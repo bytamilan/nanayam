@@ -1,0 +1,25 @@
+# GitHub Pages configuration for the Nanayam documentation site.
+#
+# Pages is configured to build from the /docs folder on main, so this
+# directory is the site root and https://bytamilan.github.io/nanayam/ maps to
+# docs/index.md.
+title: Nanayam
+description: A private, permissioned Web3 ledger on Hyperledger Fabric — documented in English and தமிழ்.
+url: https://bytamilan.github.io
+baseurl: /nanayam
+
+# A local layout rather than a theme gem: it renders identically with a plain
+# `jekyll build` and on GitHub Pages, so the site can be verified before it
+# ships.
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+
+# Exclude paths are relative to this directory, so the wiki's README needs its
+# full path: it documents the source directory and is not a page of the site.
+exclude:
+  - wiki/README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor

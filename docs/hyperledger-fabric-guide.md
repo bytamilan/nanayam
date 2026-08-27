@@ -1,3 +1,8 @@
+---
+layout: default
+title: Hyperledger Fabric — A Practical Guide
+---
+
 # Hyperledger Fabric — A Practical Guide
 
 > This document explains what Hyperledger Fabric is, how its core components work, and why Nanayam uses it as its ledger backbone.

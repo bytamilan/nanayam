@@ -1,6 +1,12 @@
+---
+layout: default
+title: API Reference
+lang: en
+---
+
 # API Reference
 
-**Languages:** **English** · [தமிழ்](API-Reference-ta)
+**Languages:** **English** · [தமிழ்](API-Reference-ta.html)
 
 The gateway exposes the same operations over REST (`:8080`) and gRPC (`:50051`).
 

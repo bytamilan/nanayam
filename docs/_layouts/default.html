@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="{{ page.lang | default: 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} · {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/assets/style.css' | relative_url }}">
+</head>
+<body>
+  <header class="site-header">
+    <a class="site-title" href="{{ '/' | relative_url }}">நாணயம் <span>Nanayam</span></a>
+    <nav class="site-nav">
+      <a href="{{ '/wiki/Home.html' | relative_url }}">Docs</a>
+      <a href="{{ '/wiki/Home-ta.html' | relative_url }}">தமிழ்</a>
+      <a href="https://github.com/bytamilan/nanayam">GitHub</a>
+    </nav>
+  </header>
+
+  <main class="content">
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      <a href="https://github.com/bytamilan/nanayam">Nanayam</a> ·
+      MIT License ·
+      Built with <a href="https://www.hyperledger.org/use/fabric">Hyperledger Fabric</a>
+    </p>
+    <p class="muted">Documentation available in English and தமிழ். Source in <code>docs/</code>.</p>
+  </footer>
+</body>
+</html>

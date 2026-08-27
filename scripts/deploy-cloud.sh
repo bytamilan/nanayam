@@ -33,6 +33,7 @@ CONSOLE_REPLICAS="2"
 SIGNUP_ENABLED="false"
 WAIT_TIMEOUT="5m"
 
+MANIFEST_FILE=""
 SKIP_BUILD="false"
 SKIP_PUSH="false"
 DRY_RUN="false"
@@ -382,14 +383,15 @@ main() {
 
   preflight
 
-  local manifest
-  manifest="$(mktemp -t nanayam-manifests.XXXXXX)"
-  trap 'rm -f "$manifest"' EXIT
-  render_manifests "$manifest"
+  # MANIFEST_FILE is global on purpose: the EXIT trap runs after main returns,
+  # so a local would already be out of scope and, under set -u, unbound.
+  MANIFEST_FILE="$(mktemp -t nanayam-manifests.XXXXXX)"
+  trap 'rm -f "${MANIFEST_FILE:-}"' EXIT
+  render_manifests "$MANIFEST_FILE"
 
   if [[ "$DRY_RUN" == "true" ]]; then
     step "Rendered manifests (--dry-run; nothing applied)"
-    cat "$manifest"
+    cat "$MANIFEST_FILE"
     return
   fi
 
@@ -406,7 +408,7 @@ main() {
   apply_auth_secret
 
   step "Applying workloads"
-  kubectl apply -f "$manifest"
+  kubectl apply -f "$MANIFEST_FILE"
   ok "Manifests applied"
 
   wait_for_rollout

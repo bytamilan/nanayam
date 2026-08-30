@@ -1,0 +1,43 @@
+# Sidebar navigation for the documentation site (docs/_layouts/default.html).
+# Grouped the way a reader actually moves through the docs, not the way the
+# files happen to be laid out on disk.
+- title: Get started
+  items:
+    - title: Home
+      url: /wiki/Home.html
+    - title: Getting Started
+      url: /wiki/Getting-Started.html
+    - title: Architecture
+      url: /wiki/Architecture.html
+- title: Reference
+  items:
+    - title: CLI Reference
+      url: /wiki/CLI-Reference.html
+    - title: API Reference
+      url: /wiki/API-Reference.html
+    - title: API Explorer
+      url: /api.html
+    - title: Sample Application Guide
+      url: /sample-app-guide.html
+- title: Operate
+  items:
+    - title: Cloud Deployment
+      url: /wiki/Cloud-Deployment.html
+    - title: Testing
+      url: /wiki/Testing.html
+    - title: Troubleshooting
+      url: /wiki/Troubleshooting.html
+    - title: Contributing
+      url: /wiki/Contributing.html
+- title: Background reading
+  items:
+    - title: Hyperledger Fabric guide
+      url: /hyperledger-fabric-guide.html
+    - title: Nanayam architecture
+      url: /nanayam-architecture.html
+    - title: Complaint system
+      url: /complaint-system.html
+    - title: Local setup guide
+      url: /local-setup-guide.html
+    - title: How it helps e-governance
+      url: /how-it-helps-e-governance.html

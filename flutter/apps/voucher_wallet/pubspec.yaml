@@ -1,0 +1,31 @@
+name: voucher_wallet
+description: >
+  Example Flutter app for the Nanayam voucher provisioning & usage sample —
+  a CDC-voucher-style demo where a government/program identity provisions
+  vouchers to citizens and businesses redeem them, with every transaction
+  recorded on the Nanayam sample ledger.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+  flutter: ">=3.22.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  nanayam_ledger_client:
+    path: ../../packages/nanayam_ledger_client
+  nanayam_ui_kit:
+    path: ../../packages/nanayam_ui_kit
+  nanayam_voucher_core:
+    path: ../../packages/nanayam_voucher_core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  http: ^1.2.0
+
+flutter:
+  uses-material-design: true

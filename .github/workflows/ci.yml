@@ -108,6 +108,37 @@ jobs:
       - name: Test
         run: pnpm test
 
+  flutter:
+    name: Flutter workspace
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      # Tracks the stable channel rather than a pinned version: the packages'
+      # SDK constraints (see flutter/*/pubspec.yaml) only set a lower bound,
+      # so there's nothing here that needs a specific release to reproduce.
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Activate melos
+        run: dart pub global activate melos
+
+      - name: Bootstrap workspace
+        run: melos bootstrap
+
+      - name: Check formatting
+        run: melos run format
+
+      - name: Analyze
+        run: melos run analyze
+
+      - name: Test
+        run: melos run test
+
   scripts:
     name: Shell scripts
     runs-on: ubuntu-latest

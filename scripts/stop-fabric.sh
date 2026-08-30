@@ -25,16 +25,26 @@ log_info()  { echo -e "${BLUE}[INFO]${NC} $1"; }
 log_ok()    { echo -e "${GREEN}[OK]${NC} $1"; }
 log_warn()  { echo -e "${YELLOW}[WARN]${NC} $1"; }
 
+# Prefer the "docker compose" v2 plugin; fall back to the standalone v1
+# binary for hosts that still only have that installed.
+compose() {
+    if docker compose version &>/dev/null; then
+        docker compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
+
 if [ "${1:-}" = "--clean" ]; then
     CLEAN=true
 fi
 
 log_info "Stopping Fabric network containers..."
-docker-compose -f "${COMPOSE_FILE}" down
+compose -f "${COMPOSE_FILE}" down
 
 if [ "${CLEAN}" = true ]; then
     log_warn "Removing Docker volumes..."
-    docker-compose -f "${COMPOSE_FILE}" down -v
+    compose -f "${COMPOSE_FILE}" down -v
 
     log_warn "Removing generated artifacts..."
     rm -rf "${PWD:?}/crypto-config"

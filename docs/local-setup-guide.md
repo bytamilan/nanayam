@@ -73,6 +73,28 @@ cd nanayam
 
 After step 5, open your browser: **http://localhost:3000**
 
+### One-script server workflow
+
+If you only want the *server* side — the Fabric network and the gateway,
+no operator console — one script runs steps 2–4 above (skipping any that
+are already done) and starts just the gateway:
+
+```bash
+# macOS / Linux
+./scripts/start-server.sh
+
+# Windows
+.\scripts\start-server.ps1
+```
+
+The Windows version delegates to the same script through WSL or Git Bash —
+see the comments at the top of `scripts/start-server.ps1` for why. Bring it
+down again with `./scripts/start-server.sh --down` (or `--clean` to also
+wipe the generated crypto/channel data). This is also what
+`.github/workflows/release-containers.yml` publishes as a container image
+(`ghcr.io/bytamilan/nanayam-gateway`) if you'd rather pull it than build it
+locally.
+
 ---
 
 ## Step-by-Step Explanation

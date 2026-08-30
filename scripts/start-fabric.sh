@@ -28,6 +28,16 @@ log_err()   { echo -e "${RED}[ERR]${NC} $1"; }
 export PATH="${BIN_DIR}:${PATH}"
 export FABRIC_CFG_PATH="${PWD}/config"
 
+# Prefer the "docker compose" v2 plugin; fall back to the standalone v1
+# binary for hosts that still only have that installed.
+compose() {
+    if docker compose version &>/dev/null; then
+        docker compose "$@"
+    else
+        docker-compose "$@"
+    fi
+}
+
 # Helper to execute peer commands inside the cli container
 cli_exec() {
     docker exec -e CORE_PEER_ADDRESS=$1 -e CORE_PEER_LOCALMSPID=$2 \
@@ -37,7 +47,7 @@ cli_exec() {
 
 start_containers() {
     log_info "Starting Fabric network containers..."
-    docker-compose -f "${COMPOSE_FILE}" up -d
+    compose -f "${COMPOSE_FILE}" up -d
     log_ok "Containers started"
 
     log_info "Waiting for services to initialize..."

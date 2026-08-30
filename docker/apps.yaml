@@ -41,8 +41,11 @@ services:
       - ../crypto-config/peerOrganizations/org1.nanayam.com:/app/crypto:ro
     networks:
       - nanayam
-    depends_on:
-      - peer0.org1.nanayam.com
+    # No depends_on here: peer0.org1.nanayam.com is defined in the separate
+    # fabric-network.yaml compose project, not this one, and compose can't
+    # express a cross-project dependency. start-distribution.sh (and
+    # start-server.sh) already check the peer is up before running this
+    # file; restart:unless-stopped covers a gateway that starts first anyway.
     restart: unless-stopped
 
   # ---------------------------------------------------------------------------

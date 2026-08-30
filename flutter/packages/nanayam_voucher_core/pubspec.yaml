@@ -1,0 +1,23 @@
+name: nanayam_voucher_core
+description: >
+  Voucher provisioning & redemption domain model for the Nanayam voucher
+  example (a CDC-voucher-style demo: a scheme provisions vouchers to
+  citizens, businesses redeem them, and every transaction is recorded on the
+  Nanayam sample ledger). Pure Dart — no Flutter dependency.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ">=3.4.0 <4.0.0"
+
+dependencies:
+  meta: ^1.15.0
+  nanayam_ledger_client:
+    path: ../nanayam_ledger_client
+  nanayam_ledger_models:
+    path: ../nanayam_ledger_models
+
+dev_dependencies:
+  http: ^1.2.0
+  lints: ^4.0.0
+  test: ^1.25.0

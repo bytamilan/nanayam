@@ -64,6 +64,34 @@ nanayam network up --profile complaint
 
 When you use `--config`, Nanayam uses only the compose file you specify. Automatic recovery is available for the built-in network configs above; custom compose files must provide their own crypto and channel artifacts.
 
+### One Script: Server Only
+
+> Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
+> Nothing else to install — no Go, no CLI, no Node.
+
+For the *server* side only — the Fabric network and the gateway, no
+operator console, no client apps — one command brings everything up, and
+is safe to re-run (each stage is skipped if it's already done):
+
+```bash
+# macOS / Linux
+./scripts/start-server.sh
+
+# Windows (PowerShell or double-click)
+.\scripts\start-server.ps1
+```
+
+```bash
+./scripts/start-server.sh --down    # stop it, keep generated crypto/data
+./scripts/start-server.sh --clean   # stop it and wipe crypto/channel data
+```
+
+The Windows script delegates to the same `start-server.sh` through WSL or
+Git Bash's `bash.exe` (Docker Desktop on Windows runs Linux containers
+through one of those anyway, so this isn't an extra dependency). See
+[`docker container images`](#container-images) below if you'd rather run a
+pre-built gateway image instead of building it locally.
+
 ### Classic Script Setup
 
 > Requires [Docker](https://docs.docker.com/get-docker/) and Docker Compose.
@@ -204,6 +232,9 @@ nanayam upgrade --dev-local --refresh --source /path/to/nanayam
 nanayam/
 ├── apps/
 │   └── org-console/           # Next.js web UI
+├── flutter/                   # Melos-managed Flutter/Dart workspace
+│   ├── packages/               # Reusable gateway client, models, UI kit, voucher domain
+│   └── apps/voucher_wallet/    # Example app: voucher provisioning & usage
 ├── cli/                       # Nanayam CLI (Go + Cobra)
 │   ├── cmd/                   # Command implementations
 │   ├── internal/              # Internal packages
@@ -227,7 +258,10 @@ nanayam/
 │   ├── start-fabric.sh        # Start Fabric network
 │   ├── stop-fabric.sh         # Stop Fabric network
 │   ├── deploy-chaincode.sh    # Deploy asset-transfer chaincode
-│   └── start-distribution.sh  # Start gateway + console
+│   ├── start-distribution.sh  # Start gateway + console
+│   ├── start-server.sh        # One-shot server-only start (Mac/Linux)
+│   ├── start-server.ps1       # One-shot server-only start (Windows)
+│   └── start-server.cmd       # CMD wrapper for start-server.ps1
 ├── services/
 │   └── gateway/               # Go gRPC/REST distribution server
 ├── install.sh                 # One-liner installer (macOS/Linux)
@@ -248,6 +282,73 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 | Create | `CreateAsset` | `POST /v1/CreateAsset` | Submit a new asset |
 | Read | `QueryAsset` | `GET /v1/QueryAsset?assetId=` | Read a single asset |
 | List | `ListAssets` | `GET /v1/ListAssets` | List all asset IDs |
+
+---
+
+## Container Images
+
+`.github/workflows/release-containers.yml` builds and publishes the
+gateway's container image to the GitHub Container Registry on every version
+tag (`v*`) push, and on demand via `workflow_dispatch`:
+
+```
+ghcr.io/bytamilan/nanayam-gateway:latest
+ghcr.io/bytamilan/nanayam-gateway:v1.2.3
+ghcr.io/bytamilan/nanayam-gateway:sha-abcdef0
+```
+
+Images are built for `linux/amd64` and `linux/arm64`. Only the gateway is
+published this way — it's the one server-side piece this repo owns and
+builds; `docker/apps.yaml` (and `scripts/start-server.sh`) already build it
+locally with the same Dockerfile, so publishing it separately just saves a
+build the next time you (or CI, or a Kubernetes deployment) need the image
+and don't want to build from source. The operator console and any Flutter
+app are clients, not servers, and aren't published by this workflow.
+
+```bash
+docker pull ghcr.io/bytamilan/nanayam-gateway:latest
+docker run -d --name nanayam-gateway --network nanayam \
+  -p 8080:8080 -p 50051:50051 \
+  -e FABRIC_CHANNEL=mychannel -e FABRIC_CHAINCODE=basic -e MSP_ID=Org1MSP \
+  -v "$(pwd)/crypto-config/peerOrganizations/org1.nanayam.com:/app/crypto:ro" \
+  ghcr.io/bytamilan/nanayam-gateway:latest
+```
+
+(A freshly published package on GHCR is private by default — an org/repo
+admin makes it public once under the package's own Settings → Danger Zone
+→ Change visibility, the same one-time step any GHCR image needs.)
+
+---
+
+## Flutter Voucher Example
+
+[`flutter/`](flutter) is a [Melos](https://melos.invertase.dev/)-managed
+Flutter/Dart monorepo demonstrating how to build a mobile client against the
+gateway's REST API. It ships reusable packages first —
+[`nanayam_ledger_models`](flutter/packages/nanayam_ledger_models),
+[`nanayam_ledger_client`](flutter/packages/nanayam_ledger_client), and
+[`nanayam_ui_kit`](flutter/packages/nanayam_ui_kit) have nothing to do with
+vouchers and are meant for any future Nanayam Flutter app — plus one
+voucher-specific domain package,
+[`nanayam_voucher_core`](flutter/packages/nanayam_voucher_core), and an
+example app, [`voucher_wallet`](flutter/apps/voucher_wallet), that provisions
+CDC-voucher-style vouchers to citizens and lets businesses redeem them, with
+every transaction recorded on the Nanayam sample ledger.
+
+Every package and the app itself have their own test suites — unit tests
+against hand-rolled fake gateways for the packages, widget tests driving the
+real screens for the app — none of which need a running Fabric network:
+
+```bash
+cd flutter
+dart pub global activate melos
+melos bootstrap
+melos run test
+```
+
+See [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md#quickstart)
+for a step-by-step guide covering the Fabric network, the gateway, and the
+app together, and the rest of that document for the full design write-up.
 
 ---
 
@@ -279,12 +380,17 @@ Reference material also lives alongside the code:
 | [`docs/hyperledger-fabric-guide.md`](docs/hyperledger-fabric-guide.md) | Hyperledger Fabric concepts & internals |
 | [`docs/nanayam-architecture.md`](docs/nanayam-architecture.md) | How Nanayam components interact |
 | [`docs/complaint-system.md`](docs/complaint-system.md) | The grievance workflow in detail |
+| [`docs/flutter-voucher-example.md`](docs/flutter-voucher-example.md) | Flutter voucher provisioning & usage example: packages, app, and ledger design |
 
 ---
 
 ## Stopping the Stack
 
 ```bash
+# If you started with ./scripts/start-server.sh
+./scripts/start-server.sh --down     # Stop the server stack (preserves data)
+./scripts/start-server.sh --clean    # Stop it and wipe all data
+
 # Using the CLI
 nanayam network down          # Stop Fabric network
 nanayam network clean         # Stop and wipe all data

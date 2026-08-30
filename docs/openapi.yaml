@@ -1,0 +1,414 @@
+openapi: 3.0.3
+info:
+  title: Nanayam Distribution Gateway API
+  description: >
+    REST surface of the Go gateway that sits between the Nanayam console (or
+    any other client) and the Hyperledger Fabric network. Every write goes
+    through the Fabric Gateway SDK and commits to the ledger before the
+    response returns; every read evaluates against a single peer.
+    See the [API Reference](wiki/API-Reference.html) for narrative notes on
+    authentication, status codes, and the equivalent gRPC service.
+  version: "1.0"
+  license:
+    name: MIT
+    url: https://github.com/bytamilan/nanayam/blob/main/LICENSE
+servers:
+  - url: http://localhost:8080
+    description: Local gateway (default port)
+tags:
+  - name: Public
+    description: No token required.
+  - name: Session
+    description: Require a bearer token.
+  - name: Assets
+    description: The asset-transfer-basic sample chaincode.
+  - name: Complaints
+    description: The grievance-workflow chaincode.
+  - name: Ledger
+    description: Raw block and chain-height introspection.
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        HS256 JWT returned by `POST /v1/Login`, carrying `sub`, `usr`, `org`,
+        `role`, `iat`, and `exp`. Expires after `AUTH_SESSION_HOURS` (default
+        24 hours).
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username: { type: string, example: admin }
+        password: { type: string, format: password, example: admin }
+    LoginResponse:
+      type: object
+      properties:
+        token: { type: string, description: HS256 JWT }
+    RegisterRequest:
+      type: object
+      required: [username, password, org]
+      properties:
+        username: { type: string, example: alice }
+        password: { type: string, format: password, example: s3cret }
+        org: { type: string, example: Org1MSP }
+    Config:
+      type: object
+      properties:
+        signupEnabled: { type: boolean }
+        channel: { type: string, example: mychannel }
+        chaincode: { type: string, example: basic }
+    User:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        org: { type: string }
+        role: { type: string }
+        createdAt: { type: string, format: date-time }
+    ChannelInfo:
+      type: object
+      properties:
+        channel: { type: string }
+        chaincode: { type: string }
+        mspId: { type: string }
+        organizations:
+          type: array
+          items:
+            type: object
+            properties:
+              mspId: { type: string }
+              role: { type: string }
+        orderers:
+          type: array
+          items: { type: string }
+    Asset:
+      type: object
+      required: [assetId, color, size, owner, appraisedValue]
+      properties:
+        assetId: { type: string, example: asset1 }
+        color: { type: string, example: blue }
+        size: { type: integer, example: 5 }
+        owner: { type: string, example: Alice }
+        appraisedValue: { type: integer, example: 300 }
+    SuccessResponse:
+      type: object
+      properties:
+        success: { type: boolean }
+    DataResponse:
+      type: object
+      properties:
+        data:
+          type: string
+          description: Raw JSON returned by the chaincode, embedded as a string.
+    AssetIdsResponse:
+      type: object
+      properties:
+        assetIds:
+          type: array
+          items: { type: string }
+    Complaint:
+      type: object
+      required: [complaintId, category, citizenHash, descriptionHash]
+      properties:
+        complaintId: { type: string, example: complaint1 }
+        category: { type: string, example: bribery }
+        citizenHash:
+          type: string
+          description: SHA-256 of the citizen's identity — never the identity itself.
+        descriptionHash:
+          type: string
+          description: SHA-256 of the complaint text — never the text itself.
+        attachmentsRef:
+          type: string
+          description: Off-chain pointer (object storage key, IPFS CID, ...).
+    ComplaintUpdate:
+      type: object
+      required: [complaintId, action, value]
+      properties:
+        complaintId: { type: string }
+        action: { type: string, example: acknowledge }
+        value: { type: string }
+    ComplaintIdsResponse:
+      type: object
+      properties:
+        complaintIds:
+          type: array
+          items: { type: string }
+    LedgerBlocks:
+      type: object
+      properties:
+        blocks:
+          type: array
+          items:
+            type: object
+            properties:
+              number: { type: integer }
+              hash: { type: string }
+              previousHash: { type: string }
+              transactionCount: { type: integer }
+              timestamp: { type: string, format: date-time }
+    LedgerActivity:
+      type: object
+      properties:
+        height: { type: integer }
+        transactionCount: { type: integer }
+security:
+  - bearerAuth: []
+paths:
+  /health:
+    get:
+      tags: [Public]
+      summary: Liveness / readiness probe
+      security: []
+      responses:
+        "200":
+          description: Gateway is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+  /v1/Config:
+    get:
+      tags: [Public]
+      summary: Public runtime configuration
+      security: []
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Config" }
+  /v1/Login:
+    post:
+      tags: [Public]
+      summary: Exchange credentials for a bearer token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LoginResponse" }
+        "401":
+          description: Bad credentials — identical whether the username is unknown or the password is wrong
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+  /v1/Register:
+    post:
+      tags: [Public]
+      summary: Create a new user (only when signup is enabled)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "400":
+          description: Duplicate or empty username
+        "403":
+          description: AUTH_SIGNUP_ENABLED is not true
+  /v1/Me:
+    get:
+      tags: [Session]
+      summary: The authenticated user
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/ChannelInfo:
+    get:
+      tags: [Session]
+      summary: Channel, chaincode, MSP, and orderer topology
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChannelInfo" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/CreateAsset:
+    post:
+      tags: [Assets]
+      summary: Submit a new asset (commits to the ledger)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Asset" }
+      responses:
+        "200":
+          description: Submitted and committed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+        "500":
+          description: The chaincode or the peer returned an error
+  /v1/QueryAsset:
+    get:
+      tags: [Assets]
+      summary: Read a single asset
+      parameters:
+        - in: query
+          name: assetId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/ListAssets:
+    get:
+      tags: [Assets]
+      summary: List every asset id
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AssetIdsResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/SubmitComplaint:
+    post:
+      tags: [Complaints]
+      summary: File a new complaint (only hashes are stored on-chain)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Complaint" }
+      responses:
+        "200":
+          description: Submitted
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/UpdateComplaint:
+    post:
+      tags: [Complaints]
+      summary: Apply a workflow action to a complaint (acknowledge, investigate, close, ...)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComplaintUpdate" }
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuccessResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/QueryComplaint:
+    get:
+      tags: [Complaints]
+      summary: Read a single complaint's current state
+      parameters:
+        - in: query
+          name: complaintId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/ListComplaints:
+    get:
+      tags: [Complaints]
+      summary: List every complaint id
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ComplaintIdsResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/GetComplaintHistory:
+    get:
+      tags: [Complaints]
+      summary: Every version of a complaint, with transaction id and timestamp
+      parameters:
+        - in: query
+          name: complaintId
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DataResponse" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/LedgerBlocks:
+    get:
+      tags: [Ledger]
+      summary: Block summaries in a range
+      parameters:
+        - in: query
+          name: start
+          schema: { type: integer, default: 0 }
+        - in: query
+          name: end
+          schema: { type: integer }
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LedgerBlocks" }
+        "401":
+          description: Missing, malformed, expired, or invalid token
+  /v1/LedgerActivity:
+    get:
+      tags: [Ledger]
+      summary: Chain height and transaction counts
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/LedgerActivity" }
+        "401":
+          description: Missing, malformed, expired, or invalid token

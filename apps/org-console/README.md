@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Operator Console
 
-## Getting Started
+The Next.js web UI for Nanayam — a working sample application built against the [distribution gateway](../../docs/wiki/API-Reference.md)'s REST API. Every screen (login, dashboard, complaints, ledger explorer) is a thin client over that API; there is no direct connection to Fabric from the browser or from this app.
 
-First, run the development server:
+Full build-and-usage documentation, including configuration, project layout, and what each route calls, lives in the **[Sample Application Guide](https://bytamilan.github.io/nanayam/sample-app-guide.html)**.
+
+## Quick start
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+pnpm dev        # http://localhost:3000, requires a gateway on :8080
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+pnpm build && pnpm start   # production build
+pnpm test                  # Jest, fetch is mocked — no gateway required
+pnpm typecheck
+pnpm lint
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+By default the console talks to a gateway at `http://localhost:8080`. Point it elsewhere with `GATEWAY_URL` (server-side) and `NEXT_PUBLIC_GATEWAY_URL` (client-side) — see the [Sample Application Guide](https://bytamilan.github.io/nanayam/sample-app-guide.html#configuration) for details.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Learn more
 
-## Learn More
+- [Nanayam documentation](https://bytamilan.github.io/nanayam/) — full docs site
+- [API Reference](https://bytamilan.github.io/nanayam/wiki/API-Reference.html) / [API Explorer](https://bytamilan.github.io/nanayam/api.html) — the gateway endpoints this console calls
+- [Getting Started](https://bytamilan.github.io/nanayam/wiki/Getting-Started.html) — bring up the full stack (Fabric network + gateway + console)
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project was bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) and uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) with [Geist](https://vercel.com/font).

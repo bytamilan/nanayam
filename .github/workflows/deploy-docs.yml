@@ -1,0 +1,68 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'scripts/check-wiki.py'
+      - 'scripts/check-site.py'
+      - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one Pages deployment at a time; let an in-flight one finish rather than
+# cancel, so a build never publishes half of two overlapping pushes.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Same two checks CI runs on every push, so a broken site can never reach
+      # this far: a missing translation/front matter, or a link Pages would 404 on.
+      - name: Validate wiki source
+        run: python3 scripts/check-wiki.py
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+
+      # Pinned to the Jekyll version GitHub Pages runs, so this build reproduces
+      # what actually gets deployed rather than whatever is newest.
+      - name: Build the documentation site
+        working-directory: docs
+        run: |
+          set -euo pipefail
+          gem install 'jekyll:3.9.5' 'kramdown-parser-gfm:1.1.0' --no-document
+          jekyll build
+
+      - name: Check the built site
+        run: python3 scripts/check-site.py docs/_site
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

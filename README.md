@@ -253,7 +253,12 @@ The distribution server exposes both **gRPC** and **REST** APIs:
 
 ## Documentation
 
-Full documentation lives in the **[Nanayam Wiki](https://github.com/bytamilan/nanayam/wiki)**, available in **English** and **தமிழ்**. The source is in [`docs/wiki/`](docs/wiki) and publishes automatically on every push to `main`.
+Full documentation lives in the **[Nanayam Wiki](https://github.com/bytamilan/nanayam/wiki)** and on the **[documentation site](https://bytamilan.github.io/nanayam/)**, available in **English** and **தமிழ்**. The source is in [`docs/`](docs) and both surfaces publish automatically on every push to `main` via GitHub Actions ([`.github/workflows/deploy-docs.yml`](.github/workflows/deploy-docs.yml) for the Pages site, [`.github/workflows/publish-wiki.yml`](.github/workflows/publish-wiki.yml) for the wiki).
+
+| | |
+|---|---|
+| [API Explorer](https://bytamilan.github.io/nanayam/api.html) | Interactive Swagger UI generated from [`docs/openapi.yaml`](docs/openapi.yaml) — try every REST endpoint against a local gateway |
+| [Sample Application Guide](https://bytamilan.github.io/nanayam/sample-app-guide.html) | Build, configure, and use the Operator Console (`apps/org-console`) — the working sample client for the gateway API |
 
 | Page | English | தமிழ் |
 |---|---|---|

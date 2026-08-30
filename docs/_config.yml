@@ -1,8 +1,11 @@
 # GitHub Pages configuration for the Nanayam documentation site.
 #
-# Pages is configured to build from the /docs folder on main, so this
-# directory is the site root and https://bytamilan.github.io/nanayam/ maps to
-# docs/index.md.
+# The site is built and deployed by .github/workflows/deploy-docs.yml (GitHub
+# Actions as the Pages source, not the classic "Deploy from a branch" build),
+# so this directory only needs to be the Jekyll source root: it is built with
+# `jekyll build` from within `docs/`, and https://bytamilan.github.io/nanayam/
+# maps to docs/index.md. One-time repo setting required: Settings → Pages →
+# Build and deployment → Source → "GitHub Actions".
 title: Nanayam
 description: A private, permissioned Web3 ledger on Hyperledger Fabric — documented in English and தமிழ்.
 url: https://bytamilan.github.io

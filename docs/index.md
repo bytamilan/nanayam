@@ -28,10 +28,11 @@ All documentation is available in **English** and **தமிழ்**.
 | When something breaks | [Troubleshooting](wiki/Troubleshooting.html) | [சிக்கல் தீர்வு](wiki/Troubleshooting-ta.html) |
 | How to contribute | [Contributing](wiki/Contributing.html) | [பங்களிப்பு](wiki/Contributing-ta.html) |
 
-### API and the sample application
+### API and client examples
 
 - [API Explorer](api.html) — interactive Swagger UI generated from [`openapi.yaml`](openapi.yaml); try every endpoint against a local gateway
 - [Sample Application Guide](sample-app-guide.html) — build, configure, and use the Operator Console (the Next.js app in `apps/org-console`)
+- [Flutter Voucher Example](flutter-voucher-example.html) — a voucher provisioning & redemption app built against the same gateway API, plus the design write-up behind it
 
 ### Background reading
 

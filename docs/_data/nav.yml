@@ -17,8 +17,12 @@
       url: /wiki/API-Reference.html
     - title: API Explorer
       url: /api.html
-    - title: Sample Application Guide
+- title: Client examples
+  items:
+    - title: Sample Application Guide (Next.js)
       url: /sample-app-guide.html
+    - title: Flutter Voucher Example
+      url: /flutter-voucher-example.html
 - title: Operate
   items:
     - title: Cloud Deployment

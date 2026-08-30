@@ -283,6 +283,18 @@ tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); 
 
 img { max-width: 100%; border-radius: var(--radius); }
 
+.mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  overflow-x: auto;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.mermaid svg { max-width: 100%; height: auto; }
+
 hr { border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }
 
 ::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); }

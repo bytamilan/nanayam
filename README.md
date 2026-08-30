@@ -360,6 +360,7 @@ Full documentation lives in the **[Nanayam Wiki](https://github.com/bytamilan/na
 |---|---|
 | [API Explorer](https://bytamilan.github.io/nanayam/api.html) | Interactive Swagger UI generated from [`docs/openapi.yaml`](docs/openapi.yaml) — try every REST endpoint against a local gateway |
 | [Sample Application Guide](https://bytamilan.github.io/nanayam/sample-app-guide.html) | Build, configure, and use the Operator Console (`apps/org-console`) — the working sample client for the gateway API |
+| [Flutter Voucher Example](https://bytamilan.github.io/nanayam/flutter-voucher-example.html) | The voucher provisioning & redemption app (`flutter/`) and the design write-up behind it |
 
 | Page | English | தமிழ் |
 |---|---|---|

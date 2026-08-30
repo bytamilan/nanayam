@@ -1,3 +1,8 @@
+---
+layout: default
+title: Flutter Voucher Example
+---
+
 # Flutter Voucher Example
 
 A worked example of building a Flutter client against the Nanayam
@@ -7,7 +12,7 @@ program provisions a fixed-value voucher to a citizen/household, and
 businesses redeem against it (in whole or in part) until the balance or an
 expiry date is exhausted, with every step recorded on the ledger.
 
-The code lives in [`flutter/`](../flutter) at the repo root, as a
+The code lives in [`flutter/`](https://github.com/bytamilan/nanayam/tree/main/flutter) at the repo root, as a
 [Melos](https://melos.invertase.dev/)-managed monorepo:
 
 ```
@@ -21,8 +26,8 @@ flutter/
     └── voucher_wallet/           # the example app
 ```
 
-See [`flutter/README.md`](../flutter/README.md) for setup instructions and
-[`flutter/apps/voucher_wallet/README.md`](../flutter/apps/voucher_wallet/README.md)
+See [`flutter/README.md`](https://github.com/bytamilan/nanayam/blob/main/flutter/README.md) for setup instructions and
+[`flutter/apps/voucher_wallet/README.md`](https://github.com/bytamilan/nanayam/blob/main/flutter/apps/voucher_wallet/README.md)
 for how to run the app end to end. This document is the design write-up:
 *why* it's built this way, and what corners were knowingly cut because this
 is a sample, not a production system.
@@ -52,7 +57,7 @@ installed. Six steps, run from the repo root:
    ```
 
    (Or use the classic scripts — `./scripts/setup-fabric.sh && ./scripts/start-fabric.sh
-   && ./scripts/deploy-chaincode.sh` — see the root [`README`](../README.md)
+   && ./scripts/deploy-chaincode.sh` — see the root [`README`](https://github.com/bytamilan/nanayam#readme)
    for both paths in full.)
 
 3. **Start the gateway:**
@@ -78,7 +83,7 @@ installed. Six steps, run from the repo root:
    ```
 
 5. **Generate the app's platform folders and run it** (not checked in —
-   see [`flutter/apps/voucher_wallet/README.md`](../flutter/apps/voucher_wallet/README.md#running-it)
+   see [`flutter/apps/voucher_wallet/README.md`](https://github.com/bytamilan/nanayam/blob/main/flutter/apps/voucher_wallet/README.md#running-it)
    for why):
 
    ```bash
